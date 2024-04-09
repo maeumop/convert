@@ -1,0 +1,41 @@
+@import '../../common.scss';
+
+.numberformat-wrap {
+  display: inline-block;
+  position: relative;
+
+  &.with-label {
+    margin-top: 0.3em;
+  }
+
+  input {
+    width: 100%;
+    border: 1px solid $gray-300;
+    padding: 9px 16px;
+    margin: 0;
+    resize: vertical;
+    color: $gray-800;
+
+    &:focus {
+      outline: none;
+      border-color: $primary;
+    }
+
+    &.error {
+      border-color: $danger;
+    }
+
+    &:disabled {
+      background-color: $gray-100;
+    }
+
+    &::placeholder {
+      color: $gray-500;
+      font-weight: 400;
+    }
+  }
+
+  &.error input {
+    border: 1px solid $danger !important;
+  }
+}

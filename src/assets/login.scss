@@ -1,0 +1,28 @@
+.login {
+  padding: 1em;
+  height: 100vh;
+
+  span {
+    display: block;
+    margin-top: 1em;
+    font-size: 0.9rem;
+    color: #8e8e8e;
+  }
+
+  .logo {
+    height: 40%;
+    width: 100%;
+    background-image: url(./img/misc/logo.png);
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+    margin-bottom: 2em;
+  }
+
+  .login-form {
+    li {
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+  }
+}

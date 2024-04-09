@@ -1,0 +1,191 @@
+@import '../common.scss';
+
+// $btn-box-shadow: 1px 1px 5px 1px rgba(0, 0, 0, 0.25);
+$btn-box-shadow: none;
+
+// DropMenu 연동
+.drop-menu {
+  svg {
+    transition: transform 0.2s;
+
+    &.rotate {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+.btn {
+  font-size: 15px;
+
+  .btn-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #fff;
+  }
+
+  &:not(.text) {
+    display: inline-block;
+    box-shadow: $btn-box-shadow;
+    // border-radius: $border-radius;
+    border: 0;
+    padding: 0 16px;
+    height: 40px;
+    transition: background-color 0.2s ease;
+
+    &.large {
+      height: 42px !important;
+    }
+
+    &.small {
+      padding: 0 12px;
+      height: 32px !important;
+      font-size: 14px;
+    }
+
+    &.xsmall {
+      padding: 0 6px;
+      font-size: 13px;
+      height: 27px !important;
+    }
+
+    &.block {
+      display: block !important;
+      width: 100%;
+    }
+
+    @each $key, $value in $theme-colors {
+      @if $key != light {
+        &.#{$key} {
+          background-color: $value;
+          color: #fff;
+
+          &.disabled {
+            background-color: lighten($value, 25);
+            color: #fff;
+          }
+
+          &:not(.disabled):hover {
+            background-color: darken($value, 10);
+          }
+
+          &:not(.disabled):active {
+            background-color: $value !important;
+          }
+        }
+      }
+    }
+
+    &.outline {
+      color: $gray-800;
+      background-color: #fff;
+      border: 1px solid $gray-300;
+
+      &:not(.disabled):hover {
+        background-color: $gray-100;
+      }
+
+      &.disabled {
+        color: $gray-300;
+        border-color: $gray-300;
+      }
+    }
+
+    &:not(.icon) {
+      &.right svg {
+        margin-left: 8px;
+      }
+
+      &.left svg {
+        margin-right: 8px;
+      }
+    }
+
+    .loading {
+      transform-origin: center center;
+      animation: spinner 1s infinite;
+    }
+  }
+
+  &.icon {
+    .only-icon {
+      line-height: 100%;
+    }
+
+    width: 40px;
+
+    &.large {
+      width: 42px;
+    }
+
+    &.small {
+      width: 32px;
+    }
+
+    &.xsmall {
+      width: 27px;
+    }
+
+    @each $key, $value in $theme-colors {
+      @if $key != light {
+        &.#{$key} {
+          background-color: $value;
+          color: #fff;
+
+          &:hover {
+            background-color: darken($value, 10);
+          }
+        }
+      }
+    }
+  }
+
+  &.text {
+    display: inline-block;
+
+    svg {
+      color: $gray-400;
+      margin-right: 7px;
+    }
+
+    &.right svg {
+      margin-right: 0;
+      margin-left: 7px;
+    }
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &.disabled:hover {
+      text-decoration: none;
+    }
+
+    @each $key, $value in $theme-colors {
+      &.#{$key} {
+        color: $value;
+
+        &:hover {
+          svg {
+            color: $value;
+          }
+        }
+      }
+    }
+  }
+}
+
+@keyframes spinner {
+  from {
+    transform: rotate(0deg);
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}

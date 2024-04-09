@@ -1,0 +1,19 @@
+.validate-wrap .feedback {
+  font-size: 0.875em !important;
+  font-weight: normal;
+  padding: 0 !important;
+  margin-top: 4px;
+  margin-bottom: 0 !important;
+  border: 0 !important;
+  color: #DD2C00;
+  text-align: left !important;
+
+  &.error {
+    animation: shaking 0.3s;
+  }
+
+  .input-wrap {
+    display: flex;
+    align-items: flex-start;
+  }
+}

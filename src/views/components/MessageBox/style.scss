@@ -1,0 +1,123 @@
+@import '@/assets/scss/abstracts/_variables.scss';
+
+$primary: map-get($theme-colors, 'primary');
+$secondary: map-get($theme-colors, 'secondasry');
+$danger: map-get($theme-colors, 'danger');
+
+.hide-scroll {
+  overflow: hidden;
+}
+
+.msg-box-fade-enter-from,
+.msg-box-fade-leave-to { opacity: 0 }
+.msg-box-fade-enter-active,
+.msg-box-fade-leave-active { transition: opacity 0.2s ease-out; }
+
+.msg-box-scale-enter-from,
+.msg-box-scale-leave-to { opacity: 0; transform: scale(0.4); }
+.msg-box-scale-enter-active,
+.msg-box-scale-leave-active { transition: all 0.2s ease-out; }
+
+.msg-box-bg {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+
+  .msg-box {
+    background-color: #fff;
+    box-sizing: border-box;
+    border-radius: 4px;
+    max-height: 95vh;
+    max-width: 95vw;
+    // box-shadow: $box-shadow;
+    padding: 30px 20px;
+
+    .title {
+      box-sizing: border-box;
+      border-radius: 4px 4px 0 0;
+      font-size: 18px;
+      font-weight: 500;
+      color: $gray-800;
+      margin: 0;
+      padding-bottom: 8px;
+
+      .close-popup {
+        display: block;
+      }
+    }
+
+    .contents {
+      font-size: 14px;
+      font-weight: 400;
+      color: $gray-800;
+      box-sizing: border-box;
+      overflow-y: auto;
+      display: block;
+      padding-bottom: 20px;
+    }
+
+    .actions {
+      border-radius: 0 0 4px 4px;
+
+      a {
+        font-size: 15px;
+        font-weight: 500;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        text-align: center;
+        transition: all 0.2s;
+      }
+
+      .btn-okay {
+        color: #fff;
+        background-color: $primary;
+        height: 42px;
+
+        &:hover {
+          background-color: darken($primary, 10);
+        }
+
+        .loading {
+          transform-origin: center center;
+          animation: spinner 1s infinite;
+        }
+      }
+
+      .btn-cancel {
+        margin-top: 8px;
+        color: $gray-800;
+        border: 1px solid $gray-300;
+        height: 42px;
+
+        &:hover {
+          background-color: $gray-100;
+        }
+      }
+    }
+  }
+}
+
+@keyframes spinner {
+  from {
+    transform: rotate(0deg);
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}

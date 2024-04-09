@@ -1,0 +1,262 @@
+@font-face {
+  font-family: 'Noto Sans KR';
+  font-style: normal;
+  font-weight: 100;
+  src: './fonts/NotoSansKR-Thin.otf' format('opentype');
+}
+
+@font-face {
+  font-family: 'Noto Sans KR';
+  font-style: normal;
+  font-weight: 300;
+  src: './fonts/NotoSansKR-Light.otf' format('opentype');
+}
+
+@font-face {
+  font-family: 'Noto Sans KR';
+  font-style: normal;
+  font-weight: 400;
+  src: './fonts/NotoSansKR-Reqular.otf' format('opentype');
+}
+
+@font-face {
+  font-family: 'Noto Sans KR';
+  font-style: normal;
+  font-weight: 500;
+  src: './fonts/NotoSansKR-Medium.otf' format('opentype');
+}
+
+@font-face {
+  font-family: 'Noto Sans KR';
+  font-style: normal;
+  font-weight: 700;
+  src: './fonts/NotoSansKR-Bold.otf' format('opentype');
+}
+
+@font-face {
+  font-family: 'Noto Sans KR';
+  font-style: normal;
+  font-weight: 900;
+  src: './fonts/NotoSansKR-Black.otf' format('opentype');
+}
+
+* {
+  font-family: 'Noto Sans KR', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #333333;
+  box-sizing: border-box;
+}
+
+html,
+body,
+div,
+applet,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+abbr,
+acronym,
+address,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+article,
+aside,
+hgroup,
+header,
+footer,
+figure,
+figcaption,
+nav,
+section {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  background: transparent;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 700;
+}
+
+ol,
+ul,
+li {
+  list-style: none;
+}
+
+label {
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+a {
+  text-decoration: none;
+  cursor: pointer;
+  vertical-align: baseline;
+  color: #000;
+}
+
+a:hover {
+  text-decoration: none;
+  outline: none;
+}
+
+blockquote,
+q {
+  quotes: none;
+}
+
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
+  content: '';
+}
+
+address,
+i,
+em {
+  font-style: normal;
+}
+
+legend,
+hr {
+  display: none;
+}
+
+caption {
+  visibility: hidden;
+  width: 0;
+  height: 0;
+  font-size: 0;
+  line-height: 0;
+}
+
+img,
+fieldset {
+  border: 0;
+}
+
+img {
+  max-width: 100%;
+  border: 0;
+  vertical-align: top;
+}
+
+button,
+input,
+optgroup,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  overflow: visible;
+  cursor: pointer;
+  line-height: 1;
+  border: 0;
+  background: transparent;
+}
+
+textarea {
+  resize: vertical;
+  font: inherit;
+  overflow-y: auto;
+}
+
+input,
+select,
+optgroup {
+  vertical-align: middle;
+  line-height: normal;
+}
+
+input,
+textarea,
+select {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+button,
+select {
+  text-transform: none;
+}
+
+select::-ms-expand {
+  display: none;
+}
+
+a,
+button,
+input,
+img {
+  outline: none;
+}
+
+button,
+input[type=button],
+input[type=reset],
+input[type=submit] {
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  background: none;
+}
+
+button:disabled,
+input[type=button]:disabled,
+input[type=reset]:disabled,
+input[type=submit]:disabled {
+  cursor: default;
+}
+
+button::-moz-focus-inner,
+input::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}
+
+input[type=number]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+  height: auto;
+}
+
+input[type=search]::-webkit-search-cancel-button,
+input[type=search]::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+}

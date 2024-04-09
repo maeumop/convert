@@ -1,0 +1,119 @@
+@charset "utf-8";
+
+$red: #DD2C00;
+$green: #00C853;
+$orange: #FFAB00;
+
+$primary: #0336FF;
+$primary-dark-deep: darken($primary, 35%);
+$primary-dark: darken($primary, 10%);
+$primary-light: lighten($primary, 35%);
+
+$secondary: #00BDFF;
+$secondary-dark: darken($secondary, 10%);
+$secondary-light: lighten($secondary, 35%);
+
+$success: #000000;
+$info: #000000;
+$warning: #000000;
+$danger: #DD2C00;
+$secondary: #000000;
+
+$gray-800: #424242;
+$gray-700: #616161;
+$gray-600: #757575;
+$gray-500: #9E9E9E;
+$gray-400: #BDBDBD;
+$gray-300: #E0E0E0;
+$gray-200: #EEEEEE;
+$gray-100: #F5F5F5;
+$gray-50: #FAFAFA;
+
+$theme-colors: (
+  "primary": $primary,
+  "success": $green,
+  "info": $secondary,
+  "warning": $orange,
+  "danger": $red,
+  "secondary": #0068af,
+  "dark": #212121,
+  "primary-dark-deep": $primary-dark-deep,
+  "gray-800": $gray-800,
+);
+
+$colors: primary, success, info, warning, danger, secondary, dark, primary-dark-deep;
+
+.block {
+  display: block !important;
+}
+
+.options-wrap {
+  display: flex;
+  justify-content: space-between;
+
+  label.input-label {
+    margin-bottom: 4px;
+    font-size: 13px;
+    font-weight: 400;
+    color: $gray-800;
+    line-height: 19px;
+
+    .required {
+      color: $danger;
+      font-weight: 400;
+    }
+  }
+
+  .counting {
+    margin-bottom: 4px;
+    padding: 0 6px;
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.5);
+    line-height: 19px;
+  }
+}
+
+.feedback {
+  margin-top: 4px;
+  font-size: 0.8em;
+  color: $danger;
+
+  &.error {
+    animation: shaking 0.3s;
+  }
+}
+
+/* error message shaking */
+@keyframes shaking {
+  0% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(10px);
+  }
+  50% {
+    transform: translateX(0);
+  }
+  75% {
+    transform: translateX(10px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.scrollbar {
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: $gray-400;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background-color: $gray-100;
+    border-radius: 3px;
+  }
+}

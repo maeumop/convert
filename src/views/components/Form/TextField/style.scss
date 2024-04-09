@@ -1,0 +1,116 @@
+@import '../../common.scss';
+
+.input-wrap {
+  display: inline-block;
+  position: relative;
+
+  .input-relative {
+    width: 100%;
+    position: relative;
+
+    .btn-clear {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      top: 0;
+      right: 0;
+
+      &.with-icon {
+        right: 24px;
+      }
+
+      svg {
+        margin-top: 3px;
+        color: $gray-700;
+      }
+    }
+  }
+
+  input, textarea {
+    width: 100%;
+    border: 1px solid $gray-300;
+    padding: 9px 16px;
+    margin: 0;
+    resize: vertical;
+    color: $gray-800;
+
+    &:focus {
+      outline: none;
+      border: 1px solid $primary;
+    }
+
+    &.error {
+      border-color: $danger;
+    }
+
+    &:read-only,
+    &:disabled {
+      background-color: $gray-100;
+
+      & + span::before {
+        color: $gray-400;
+      }
+      &:focus {
+        outline: none;
+        border: 1px solid $gray-300;
+      }
+    }
+
+    &::placeholder {
+      color: $gray-400;
+      font-weight: 400;
+      font-size: 0.8em;
+    }
+
+    &.left-space {
+      text-indent: 25px;
+    }
+
+    &.right-space {
+      padding-right: 40px !important;
+    }
+  }
+
+  .feedback {
+    text-align: left;
+    font-size: 0.8rem;
+    padding-left: 0.4rem;
+    font-weight: 200;
+
+    .error {
+      color: $danger !important;
+    }
+  }
+
+  input {
+    height: 40px;
+  }
+
+  .with-slot {
+    display: flex;
+    align-items: center;
+    position: relative;
+
+    input + * {
+      flex: 1;
+      margin-right: 4px;
+    }
+
+    svg {
+      display: block;
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      text-align: center;
+      color: $gray-800;
+      margin-right: 0;
+
+      &.left {
+        left: 8px !important;
+      }
+    }
+  }
+}

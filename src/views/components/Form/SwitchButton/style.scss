@@ -1,0 +1,147 @@
+@import '../../common.scss';
+
+.switch-wrap {
+  display: inline-block;
+  position: relative;
+  vertical-align: middle;
+
+  @each $color in $colors {
+    &.#{$color} {
+      input[type=checkbox]:checked {
+        & + span {
+          background-color: map-get($theme-colors, $color);
+        }
+
+        & + span:hover {
+          background-color: map-get($theme-colors, $color);
+        }
+
+        & + svg {
+          color: map-get($theme-colors, $color);
+        }
+      }
+    }
+  }
+
+  .switch {
+    cursor: pointer;
+    font-size: 14px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &.checkbox {
+      display: flex;
+      align-items: center;
+
+      svg {
+        margin-right: 3px;
+        color: $gray-400;
+      }
+
+      &:hover svg {
+        color: $gray-600;
+      }
+    }
+
+
+    input[type=checkbox] {
+      position: absolute;
+      clip: rect(0, 0, 0, 0);
+
+      & + span {
+        display: inline-block;
+        width: 41px;
+        height: 20px;
+        background: $gray-300;
+        border-radius: 10px;
+        margin-right: 5px;
+        transition: all 0.2s;
+
+        i {
+          display: inline-block;
+          margin: 4px;
+          width: 12px;
+          height: 12px;
+          background: $white;
+          border-radius: 50%;
+          transition: all 0.2s;
+        }
+
+        &:hover {
+          background-color: $gray-400;
+        }
+      }
+
+      &:checked + span {
+        i {
+          transform: translateX(41px - 12px - 8px);
+        }
+      }
+    }
+
+
+    &.small {
+      line-height: 19px;
+
+      input[type=checkbox] {
+        & + span {
+          width: 30px;
+          height: 15px;
+          margin-right: 5px;
+
+          i {
+            margin: 3px;
+            width: 9px;
+            height: 9px;
+          }
+        }
+
+        &:checked + span {
+          i {
+            transform: translateX(30px - 9px - 6px);
+          }
+        }
+      }
+
+      svg {
+        height: 16px
+      }
+    }
+  }
+
+  .feedback {
+    font-size: 0.875em !important;
+    font-weight: normal;
+    padding: 0 !important;
+    margin-bottom: 0 !important;
+    border: 0 !important;
+    color: $danger;
+    text-align: left !important;
+
+    &.error {
+      animation: shaking 0.3s;
+    }
+  }
+
+  .check-scale-enter-from,
+  .check-scale-leave-to {
+    opacity: 0;
+    transform: scale(1.2);
+  }
+  .check-scale-enter-active,
+  .check-scale-leave-active {
+    transition: all 0.1s ease;
+  }
+
+  .label-fade-enter-from,
+  .label-fade-leave-to {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  .label-fade-enter-active,
+  .label-fade-leave-active {
+    transition: all 0.1s ease;
+  }
+}
