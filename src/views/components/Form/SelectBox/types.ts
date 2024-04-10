@@ -32,8 +32,8 @@ export interface SelectBoxItem {
 }
 
 export interface SelectBoxModel {
-  element: HTMLDivElement;
-  check(silence?: boolean): void;
-  resetForm(): void;
-  resetValidate(): void;
+  element: HTMLElement | null;
+  check: (silence?: boolean) => boolean;
+  resetForm: () => void;
+  resetValidate: () => void;
 }

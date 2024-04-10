@@ -1,5 +1,10 @@
 import { useState, useRef, useMemo, useEffect, forwardRef, useImperativeHandle } from 'react';
-import type { CSSProperties } from 'react';
+import type {
+  CSSProperties,
+  MouseEvent as ReactMouseEvent,
+  KeyboardEvent as ReactKeyboardEvent,
+  AnimationEvent,
+} from 'react';
 import type { SelectBoxItem, SelectBoxModel, SelectBoxProps } from './types';
 import {
   mdiWindowClose,
@@ -10,8 +15,11 @@ import {
   mdiCloseCircle,
   mdiGoogleCirclesExtended,
 } from '@mdi/js';
-import './style.scss';
 import uuid from 'react-uuid';
+import { TimeoutId } from 'node_modules/@reduxjs/toolkit/dist/query/core/buildMiddleware/types';
+import Icon from '@mdi/react';
+import './style.scss';
+import { CSSTransition } from 'react-transition-group';
 
 export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref) => {
   const elementId = uuid();
@@ -24,15 +32,14 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
   const [isSearchFilter, setIsSearchFilter] = useState<boolean>(false);
   const [selectedText, setSelectedText] = useState<string | string[]>(props.multiple ? [] : '');
   const [selectedValue, setSelectedValue] = useState<string | string[]>(props.multiple ? [] : '');
-
   const [optionList, setOptionList] = useState<SelectBoxItem[]>([...props.options]);
+  const [searchInputValue, setSearchInputValue] = useState<string>('');
 
-  const selectBoxRef = useRef<HTMLSelectElement>(null);
-  const searchInput = useRef<HTMLInputElement>(null);
-  const ul = useRef<HTMLUListElement>(null);
+  const transitionRef = useRef<HTMLDivElement>(null);
+  const selectBoxRef = useRef<HTMLDivElement>(null);
+  const ulRef = useRef<HTMLUListElement>(null);
 
-  const
-    layerPositionStyle = useState<CSSProperties>({
+  const [layerPos, setLayerPos] = useState<CSSProperties>({
     top: '',
     left: '',
     bottom: '',
@@ -77,7 +84,6 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
     return false;
   }, [props.multiple]);
 
-
   const styleWidth = useMemo<string>(() => {
     if (typeof props.width === 'string') {
       return props.width;
@@ -88,13 +94,39 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
     return '';
   }, [props.width]);
 
-  const wrapperStyle = useMemo<string>(() => {
+  const wrapperClassName = useMemo<string>(() => {
     return [
-      props.label ? 'with-label' : '',
-      !isValidate ? 'error' : '',
-      props.block ? 'block' : '',
-    ].join(' ');
+      'select-box ',
+      props.label ? 'with-label ' : '',
+      !isValidate ? 'error ' : '',
+      props.block ? 'block ' : '',
+    ].join('');
   }, [props.label, isValidate, props.block]);
+
+  const labelClassName = useMemo<string>(() => [
+    'input-label ',
+    !isValidate ? 'error ' : ''
+  ].join(''), [isValidate]);
+
+  const arrowIconClassName = useMemo<string>(() => [
+    'arrow ',
+    isShowOption ? 'rotate ' : ''
+  ].join(''), [isShowOption]);
+
+  const layerClassName = useMemo<string>(() => [
+    'option-list ',
+    showBottom ? 'show-bottom ' : 'show-top '
+  ].join(''), [showBottom]);
+
+  const optionCheckAllClassName = useMemo<string>(() => [
+    'option-item ',
+    selectedKeyIndex === 0 && !isSearchFilter ? 'key-selected ' : ''
+  ].join(''), [selectedKeyIndex, isSearchFilter]);
+
+  const optionCheckAllIconClassName = useMemo<string>(() => [
+    'checkbox ',
+    isSelectAll ? 'checked ' : '',
+  ].join(''), [isSelectAll]);
 
   const getShowText = useMemo<string[]>(() => {
     if (props.btnAccept) {
@@ -209,7 +241,9 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
    *
    * @param index
    */
-  const selectOption = (v: any): void => {
+  const selectOption = (event: ReactMouseEvent | MouseEvent | ReactKeyboardEvent | KeyboardEvent, v: any): void => {
+    event.stopPropagation();
+
     let index = -1;
 
     const [{ text }] = optionList.filter((item, i) => {
@@ -257,7 +291,9 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
     return props.value === v;
   };
 
-  const removeSelected = (index: number): void => {
+  const removeSelected = (event: ReactMouseEvent, index: number): void => {
+    event.stopPropagation();
+
     if (props.multiple) {
       setSelectedText((selectedText as string[]).splice(index, 1));
       setSelectedValue((selectedValue as string[]).splice(index, 1));
@@ -285,7 +321,9 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
   /**
    * 전체 선택
    */
-  const selectAll = (): void => {
+  const selectAll = (event?: ReactMouseEvent): void => {
+    event?.stopPropagation();
+
     if (props.multiple) {
       const value: boolean = isSelectAll;
 
@@ -305,13 +343,11 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
     }
   };
 
-  let [transitionStatus, setTransitionStatus] = useState<boolean>(false);
-
   /**
    * 옵션 목록 표시
    */
-  const toggleOption = (event?: FocusEvent): void => {
-    if (!props.disabled && !props.readonly && !transitionStatus) {
+  const toggleOption = (): void => {
+    if (!props.disabled && !props.readonly) {
       if (!isShowOption) {
         const windowHeight: number = window.innerHeight;
         const rect = selectBoxRef.current?.getBoundingClientRect() as DOMRect;
@@ -322,24 +358,23 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
           setShowBottom(false);
         }
 
-        layerPositionStyle.top =  '';
-        layerPositionStyle.bottom =  '';
-
-        layerPositionStyle.left = `${rect.left}px`;
-        layerPositionStyle.width = `${rect.width}px`;
-        layerPositionStyle.bottom = showBottom ? `${(windowHeight - rect.top) + 3}px` : '';
-        layerPositionStyle.top = !showBottom ? `${rect.top + 43}px` : '';
+        setLayerPos({
+          left: `${rect.left}px`,
+          width: `${rect.width}px`,
+          bottom: showBottom ? `${(windowHeight - rect.top) + 3}px` : '',
+          top: !showBottom ? `${rect.top + 43}px` : '',
+        });
       }
 
       setIsShowOption(!isShowOption);
 
       if (isShowOption) {
         if (props.searchable) {
-          searchInput.value!.value = '';
-          isSearchFilter.value = false;
+          setSearchInputValue('');
+          setIsSearchFilter(false);
         }
 
-        optionList.value = [...props.options];
+        setOptionList([...props.options]);
 
         // nextTick(() => {
         //   const selected = ul.value?.querySelector('.selected');
@@ -349,35 +384,41 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
     }
   };
 
-  let timeout: number = 0;
+  let timeout: TimeoutId;
 
   // props.searchable 적용시
-  const searchText = (evt: KeyboardEvent): void => {
+  const searchText = (evt: ReactKeyboardEvent | KeyboardEvent): void => {
     const key = evt.key.toLowerCase();
 
     clearTimeout(timeout);
 
     if (!['arrowup', 'arrowdown', 'enter'].includes(key)) {
-      selectedKeyIndex.value = 0;
+      setSelectedKeyIndex(0);
+
       timeout = setTimeout(() => {
         const { value } = evt.target as HTMLInputElement;
-        isSearchFilter.value = value ? true : false;
+
+        setIsSearchFilter(value ? true : false);
+
         if (value) {
-          optionList.value = props.options.filter(({ text }) => text.toLowerCase().indexOf(value.toLowerCase()) > -1);
+          setOptionList(props.options.filter(({ text }) => text.toLowerCase().indexOf(value.toLowerCase()) > -1));
         } else {
-          optionList.value = [...props.options];
+          setOptionList([...props.options]);
         }
 
-        nextTick(() => {
-          const li = ul.value?.querySelector<HTMLLIElement>('.option-item');
-          li?.scrollIntoView({ block: 'center' });
-        });
+        // nextTick(() => {
+        //   const li = ul.value?.querySelector<HTMLLIElement>('.option-item');
+        //   li?.scrollIntoView({ block: 'center' });
+        // });
       }, 300);
     }
   };
 
   // props.isAccept 적용시
-  const accept = (): void => {
+  const accept = (event: ReactMouseEvent): void => {
+    event.preventDefault();
+    event.stopPropagation();
+
     setIsShowOption(false);
     updateValue(selectedValue);
   };
@@ -425,13 +466,13 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
     }
   };
 
-  const feedback = useState<HTMLDivElement>();
-  const main = useState<HTMLDivElement>();
+  const feedbackRef = useRef<HTMLDivElement>(null);
+  const mainRef = useRef<HTMLDivElement>(null);
 
   let eventParentElement: HTMLElement;
 
-  const parentScrollEvent = (): void => {
-    isShowOption.value = false;
+  const parentScrollEvent = () => {
+    setIsShowOption(false);
   };
 
   /**
@@ -439,7 +480,7 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
    * scroll event를 추가 하여 scorll 발생시 layer 창을 닫아 준다.
    * @param el
    */
-  const setScrollEvent = (el: HTMLElement): void => {
+  const setScrollEvent = (el: HTMLElement) => {
     const parent = el.parentElement as HTMLElement;
 
     if (parent) {
@@ -458,353 +499,394 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
     }
   };
 
-  const clearButtonShow = computed<boolean>(() => {
-    if (props.modelValue) {
-      return props.clearable && !props.disabled && !props.readonly && props.modelValue.length > 0;
-    } else {
-      return false;
+  const clearButtonShow = useMemo<boolean>(() => {
+    if (props.value) {
+      return (
+        props.clearable !== undefined
+        && !props.disabled
+        && !props.readonly
+        && props.value.length > 0
+      );
     }
-  });
 
-  const clearValue = (): void => {
+    return false;
+  }, [props.value, props.clearable, props.disabled, props.readonly]);
+
+  const clearValue = (event: ReactMouseEvent<HTMLAnchorElement>): void => {
+    event.preventDefault();
+    event.stopPropagation();
+
     updateValue(props.multiple ? [] : '');
   };
 
   const onBlur = (): void => {
-    nextTick(() => {
-      emit('blur', selectedValue.value);
-    });
+    props.onChange(selectedValue);
   };
 
-  const onKeyHandler = (event: KeyboardEvent): void => {
-    if (isShowOption.value) {
-      const li = ul.value?.querySelectorAll<HTMLLIElement>('.option-item');
+  const onKeyHandler = (event: ChangeEvent | ReactKeyboardEvent | KeyboardEvent): void => {
+    event.stopPropagation();
+
+    const code = event.code.toLowerCase();
+    const keyCodes = ['arrowup', 'arrowdown', 'enter', 'tab']
+
+    if (!keyCodes.includes(code)) {
+      return;
+    }
+
+    if (isShowOption) {
+      const li = ulRef.current?.querySelectorAll<HTMLLIElement>('.option-item');
 
       if (li) {
         const len = li.length;
         const code = event.code.toLowerCase();
 
-        if (code === 'arrowdown' && selectedKeyIndex.value < len) {
-          selectedKeyIndex.value++;
+        if (code === 'arrowdown' && selectedKeyIndex < len) {
+          setSelectedKeyIndex(selectedKeyIndex + 1);
 
-          if (selectedKeyIndex.value >= len) {
-            selectedKeyIndex.value = 0;
+          if (selectedKeyIndex >= len) {
+            setSelectedKeyIndex(0);
           }
 
-          len && li[selectedKeyIndex.value].scrollIntoView({ block: 'center' });
+          len && li[selectedKeyIndex].scrollIntoView({ block: 'center' });
 
-        } else if (code === 'arrowup' && selectedKeyIndex.value >= -1) {
-          selectedKeyIndex.value--;
+        } else if (code === 'arrowup' && selectedKeyIndex >= -1) {
+          setSelectedKeyIndex(selectedKeyIndex - 1);
 
-          if (selectedKeyIndex.value === -1) {
-            selectedKeyIndex.value = len - 1;
+          if (selectedKeyIndex === -1) {
+            setSelectedKeyIndex(len - 1);
           }
 
-          len && li[selectedKeyIndex.value].scrollIntoView({ block: 'center' });
+          len && li[selectedKeyIndex].scrollIntoView({ block: 'center' });
 
         } else if (['numpadenter', 'enter'].includes(code)) {
-          if (props.multiple && !isSearchFilter.value && selectedKeyIndex.value === 0) {
+          if (props.multiple && !isSearchFilter && selectedKeyIndex === 0) {
             selectAll();
           } else {
-            const index = props.multiple && !isSearchFilter.value ? selectedKeyIndex.value - 1 : selectedKeyIndex.value;
-            if (index > -1 && index < optionList.value.length) {
-              const value = optionList.value[index].value;
-              selectOption(value);
+            const index = props.multiple && !isSearchFilter ? selectedKeyIndex - 1 : selectedKeyIndex;
+            if (index > -1 && index < optionList.length) {
+              const value = optionList[index].value;
+              selectOption(event, value);
             }
           }
         } else if (code === 'tab') {
           if (document.activeElement instanceof HTMLElement) {
-            const parentElement = SelectBox.value?.parentElement || undefined;
+            const parentElement = selectBoxRef.current?.parentElement || undefined;
             const isFocused: boolean = parentElement ? document.activeElement.contains(parentElement) : false;
             // 해당 SelectBox 포커스영역에서 포커스 이동시, 옵션 영역 활성화 해제 진행.
             !isFocused && toggleOption();
           }
         }
       }
+
+      searchText(event);
     }
   };
 
-  const onEscapeKeyHandler = (event: KeyboardEvent): void => {
+  const onEscapeKeyHandler = (event: ReactKeyboardEvent): void => {
     const code = event.code.toLowerCase();
-    if (isShowOption.value && code === 'escape') {
-      isShowOption.value = false;
+
+    if (isShowOption && code === 'escape') {
+      setIsShowOption(false);
       noneAccept();
 
       // eventPhase : 0 = none / 1 = capture / 2 = target / 3 = bubbling
       // 모달 내부의 SelectBox 키 이벤트와 동시에 Modal도 같이 이벤트 수행이 되기 때문에
       // SelectBox 이벤트만 수행 후, 이벤트 전파 중지.
       const eventPhase: number = event.eventPhase;
+
       (eventPhase === 1 || eventPhase === 2) && event.stopPropagation();
     }
   };
 
-  useEffect(isShowOption, (v) => {
-    if (v) {
+  useEffect(() => {
+    if (isShowOption) {
       document.addEventListener('keydown', onKeyHandler);
-    } else {
+    }
+
+    return () => {
       document.removeEventListener('keydown', onKeyHandler);
     }
-  });
+  }, [isShowOption]);
 
-  onMounted(() => {
+  const onAnimationEnd = (event: AnimationEvent) => {
+    setErrorTransition(false);
+  };
+
+  useEffect(() => {
     setDefaultModelValue();
 
-    setScrollEvent(main.value!);
+    if (mainRef.current) {
+      setScrollEvent(mainRef.current);
+    }
+
     document.addEventListener('click', outSideClickEvent);
 
-    // feedback message 트랜지션 초기화
-    feedback.value!.addEventListener('animationend', () => {
-      errorTransition.value = false;
-    });
-  });
+    return () => {
+      document.removeEventListener('click', outSideClickEvent);
+      document.removeEventListener('keydown', onKeyHandler);
 
-  onUnmounted(() => {
-    document.removeEventListener('click', outSideClickEvent);
-    document.removeEventListener('keydown', onKeyHandler);
-
-    if (eventParentElement) {
-      eventParentElement.removeEventListener('scroll', parentScrollEvent);
+      if (eventParentElement) {
+        eventParentElement.removeEventListener('scroll', parentScrollEvent);
+      }
     }
-  });
+  }, []);
 
-  useImperativeHandle(ref, {
-    element: document.getElementById(elementId),
-    check,
-    resetForm,
-    resetValidate,
+  const selectBoxClassName = useMemo<string>(() => [
+    'control-wrap',
+    props.disabled ? 'disabled' : '',
+    props.readonly ? 'readonly' : '',
+    message ? 'error' : '',
+    isShowOption ? 'active': '',
+  ].join(' '), []);
+
+  useImperativeHandle(ref, () => {
+    return {
+      element: document.getElementById(elementId),
+      check,
+      resetForm,
+      resetValidate,
+    }
   });
 
   return (
     <>
       <div
-        ref="main"
-        tabindex="0"
+        ref={mainRef}
+        tabIndex={0}
         id={elementId}
-        :style="{ width: styleWidth }"
-        :class="['select-box', wrapperStyle]"
-        @focus="!isShowOption && toggleOption($event)"
-        @keydown.escape.capture="onEscapeKeyHandler"
+        style={{ width: styleWidth }}
+        className={wrapperClassName}
+        onKeyDown={onEscapeKeyHandler}
       >
-        <div
-          class="options-wrap"
-          v-if="!props.inLabel"
-        >
-          <label
-            :class="['input-label', { error: !isValidate }]"
-            v-if="props.label"
-          >
-            {{ props.label }}
-
-            <span
-              class="required"
-              v-if="props.required"
-            >
-              *
-            </span>
-          </label>
-        </div>
+        {!props.inLabel && (
+          <div className="options-wrap">
+            <>
+            {props.label && (
+              <label className={labelClassName}>
+                { props.label }
+                {props.required && (<span className="required">*</span>)}
+              </label>
+            )}
+            </>
+          </div>
+        )}
 
         <div
-          ref="SelectBox"
-          :class="['control-wrap', { disabled: props.disabled, readonly: props.readonly, error: message, active: isShowOption }]"
-          @click="toggleOption"
+          ref={selectBoxRef}
+          className={selectBoxClassName}
+          onClick={toggleOption}
         >
-          <template v-if="props.multiple">
-            <div
-              class="text"
-              v-if="getShowText.length"
+          {props.multiple ? (
+            <>
+              {getShowText.length ? (
+                <div className="text">
+                  {props.labelText ? (
+                    <>
+                      {!props.isShort ? (
+                        <>
+                          {getShowText.map((txt, i) => (
+                            <span
+                              className="item"
+                              key={`selectedItem${i}`}
+                              onClick={(event) => removeSelected(event, i)}
+                            >
+                              {txt}
+                              <Icon
+                                className="remove-icon"
+                                size="13"
+                                path={mdiWindowClose}
+                              />
+                            </span>
+                          ))}
+                        </>
+                      ) : (
+                        <>
+                          <span>{getShowText[0]}</span>
+                          {getShowText.length > 1 && (<>&nbsp;+ {getShowText.length - 1}</>)}
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {!props.isShort ? (
+                        <>
+                          {props.inLabel && (
+                            <span className="label">
+                              {props.label}:
+                            </span>
+                          )}
+
+                          {getShowText.join(', ')}
+                        </>
+                      ) : (
+                        <>
+                          {props.inLabel && (
+                            <span className="label">
+                              {props.label}:
+                            </span>
+                          )}
+
+                          {getShowText[0]}
+                          {getShowText.length > 1 && (<>&nbsp;+ {getShowText.length - 1}</>)}
+                        </>
+                      )}
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="text ph">
+                  {props.inLabel && (
+                    <span className="label">
+                      {props.label}:
+                    </span>
+                  )}
+
+                  {props.placeholder}
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              {getShowText.length > 0 ? (
+                <div className="text">
+                  {props.inLabel && (
+                    <span className="label">
+                      { props.label }:
+                    </span>
+                  )}
+
+                  { getShowText[0] }
+                </div>
+              ) : (
+                <div className="text ph">
+                  {props.inLabel && (
+                    <span className="label">
+                      { props.label }:
+                    </span>
+                  )}
+
+                  { props.placeholder }
+                </div>
+              )}
+            </>
+          )}
+
+          {clearButtonShow && (
+            <a
+              href="#"
+              className="btn-clear"
+              onClick={clearValue}
             >
-              <template v-if="props.labelText">
-                <template v-if="!props.isShort">
-                  <span
-                    :key="`selectedItem${i}`"
-                    class="item"
-                    v-for="(txt, i) in getShowText"
-                  >
-                    {{ txt }}
-                    <SvgIcon
-                      type="mdi"
-                      class="remove-icon"
-                      size="13"
-                      :path="mdiWindowClose"
-                      @click.stop="removeSelected(i)"
-                    />
-                  </span>
-                </template>
-                <template v-else>
-                  <span>{{ getShowText[0] }}</span>
+              <Icon size="20" path={mdiCloseCircle} />
+            </a>
+          )}
 
-                  <template v-if="getShowText.length > 1"> &nbsp; + {{ getShowText.length - 1 }} </template>
-                </template>
-              </template>
-              <template v-else>
-                <template v-if="!props.isShort">
-                  <span
-                    class="label"
-                    v-if="props.inLabel"
-                  >
-                    {{ props.label }}:
-                  </span>
-
-                  {{ getShowText.join(', ') }}
-                </template>
-                <template v-else>
-                  <span
-                    class="label"
-                    v-if="props.inLabel"
-                  >
-                    {{ props.label }}:
-                  </span>
-
-                  {{ getShowText[0] }}
-                  <template v-if="getShowText.length > 1"> + {{ getShowText.length - 1 }} </template>
-                </template>
-              </template>
-            </div>
-            <div class="text ph" v-else>
-              <span class="label" v-if="props.inLabel">
-                {{ props.label }}:
-              </span>
-
-              {{ props.placeholder }}
-            </div>
-          </template>
-          <template v-else>
-            <div
-              class="text"
-              v-if="getShowText.length > 0"
-            >
-              <span
-                class="label"
-                v-if="props.inLabel"
-              >
-                {{ props.label }}:
-              </span>
-
-              {{ getShowText[0] }}
-            </div>
-            <div
-              class="text ph"
-              v-else
-            >
-              <span
-                class="label"
-                v-if="props.inLabel"
-              >
-                {{ props.label }}:
-              </span>
-
-              {{ props.placeholder }}
-            </div>
-          </template>
-
-          <a
-            href="#"
-            class="btn-clear"
-            @click.stop.prevent="clearValue"
-            v-if="clearButtonShow"
-          >
-            <SvgIcon type="mdi" size="20" :path="mdiCloseCircle" />
-          </a>
-
-          <div :class="['arrow', { rotate: isShowOption }]">
-            <SvgIcon type="mdi" size="16" :path="mdiChevronDown" />
+          <div className={arrowIconClassName}>
+            <Icon size="16" path={mdiChevronDown} />
           </div>
 
-          <Transition
-            :name="showBottom ? 'options-view-bottom' : 'options-view'"
-            @leave="[onBlur(), props.blurValidate && check()]"
+            {/* @leave="[onBlur(), props.blurValidate && check()]"
             @enter="transitionStatus = true"
-            @after-enter="transitionStatus = false"
+            @after-enter="transitionStatus = false" */}
+          <CSSTransition
+            unmountOnExit
+            timeout={200}
+            in={isShowOption}
+            nodeRef={transitionRef}
+            classNames={showBottom ? 'option-items-bottom' : 'option-items'}
           >
             <div
-              :style="layerPositionStyle"
-              :class="['option-list', showBottom ? 'show-bottom' : 'show-top']"
-              v-show="isShowOption"
+              ref={transitionRef}
+              style={layerPos}
+              className={layerClassName}
             >
-              <div
-                class="search"
-                @click.stop
-                v-if="props.searchable"
-              >
-                <div class="search-wrap">
-                  <input
-                    ref="searchInput"
-                    placeholder="검색어 입력"
-                    type="text"
-                    @keydown.up.prevent="onKeyHandler"
-                    @keydown.down.prevent="onKeyHandler"
-                    @keydown.enter.prevent="onKeyHandler"
-                    @keydown.tab.prevent="onKeyHandler"
-                    @keydown.stop="searchText"
-                  />
-                  <SvgIcon
-                    type="mdi"
-                    :path="mdiMagnify"
-                  />
-                </div>
-              </div>
-              <ul ref="ul" class="scrollbar">
-                <li
-                  :class="['option-item', selectedKeyIndex === 0 && !isSearchFilter && 'key-selected']"
-                  @click.stop="selectAll"
-                  v-if="props.multiple && !props.maxLength && !isSearchFilter"
+              {props.searchable && (
+                <div
+                  className="search"
+                  onClick={(event) => event.stopPropagation()}
                 >
-                  <SvgIcon
-                    type="mdi"
-                    :class="['checkbox', isSelectAll && 'checked']"
-                    :path="isSelectAll ? mdiCheckboxMarked : mdiCheckboxBlankOutline"
-                  />
-                  {{ isSelectAll ? '전체 해제' : '전체 선택' }}
-                </li>
-                <template v-if="optionList.length">
+                  <div className="search-wrap">
+                    <input
+                      type="text"
+                      placeholder="검색어 입력"
+                      value={searchInputValue}
+                      onChange={(event) => setSearchInputValue(event.target.value)}
+                      onKeyDown={onKeyHandler}
+                    />
+                    <Icon color="#888" path={mdiMagnify} />
+                  </div>
+                </div>
+              )}
+              <ul ref={ulRef} className="scrollbar">
+                {(props.multiple && !props.maxLength && !isSearchFilter) && (
                   <li
-                    :key="`select-${item.value}`"
-                    :class="['option-item', { selected: isOptionSelected(item.value), 'key-selected': isOptionFocused(i) }]"
-                    @click.stop="selectOption(item.value)"
-                    v-for="(item, i) in optionList"
+                    className={optionCheckAllClassName}
+                    onClick={selectAll}
                   >
-                    <template v-if="props.multiple">
-                      <SvgIcon
-                        type="mdi"
-                        class="checkbox"
-                        :path="isOptionSelected(item.value) ? mdiCheckboxMarked : mdiCheckboxBlankOutline"
-                      />
-                    </template>
-                    {{ item.text }}
+                    <Icon
+                      className={optionCheckAllIconClassName}
+                      path={isSelectAll ? mdiCheckboxMarked : mdiCheckboxBlankOutline}
+                    />
+                    { isSelectAll ? '전체 해제' : '전체 선택' }
                   </li>
-                </template>
-                <template v-else>
-                  <li @click.stop>검색된 내용이 없습니다.</li>
-                </template>
-                <li class="items-loading" v-if="props.isLoading">
-                  <SvgIcon
-                    type="mdi"
-                    class="loading"
-                    size="24"
-                    :path="mdiGoogleCirclesExtended"
-                  />
-                </li>
+                )}
+                {optionList.length ? (
+                  <>
+                  {optionList.map((item, i) => (
+                    <li
+                      key={`select-${item.value}`}
+                      className={[
+                        'option-item ',
+                        isOptionSelected(item.value) ? 'selected ' : '',
+                        isOptionFocused(i) ? 'key-selected ' : ''
+                      ].join('')}
+                      onClick={(event) => selectOption(event, item.value)}
+                    >
+                      <template v-if="props.multiple">
+                        <Icon
+                          className="checkbox"
+                          path={isOptionSelected(item.value) ? mdiCheckboxMarked : mdiCheckboxBlankOutline}
+                        />
+                      </template>
+                      { item.text }
+                    </li>
+                  ))}
+                  </>
+                ) : (
+                  <li onClick={(event) => event.stopPropagation()}>검색된 내용이 없습니다.</li>
+                )}
+                {props.isLoading && (
+                  <li className="items-loading">
+                    <Icon
+                      className="loading"
+                      size="24"
+                      path={mdiGoogleCirclesExtended}
+                    />
+                  </li>
+                )}
               </ul>
-              <a
-                href="#"
-                class="btn-accept"
-                @click.stop.prevent="accept"
-                v-if="props.btnAccept"
-              >
-                적용 + {{ selectedValue.length }}
-              </a>
+              {props.btnAccept && (
+                <a
+                  href="#"
+                  className="btn-accept"
+                  onClick={accept}
+                >
+                  적용 + { selectedValue.length }
+                </a>
+              )}
             </div>
-          </Transition>
+          </CSSTransition>
         </div>
 
-        <div
-          ref="feedback"
-          :class="['feedback', { error: errorTransition }]"
-          v-show="message && !props.hideMessage"
-        >
-          {{ message }}
-        </div>
+        {(message && !props.hideMessage) && (
+          <div
+            ref={feedbackRef}
+            className={['feedbackRef', errorTransition ? 'error' : ''].join(' ')}
+            onAnimationEnd={onAnimationEnd}
+          >
+            { message }
+          </div>
+        )}
       </div>
     </>
   );
@@ -814,7 +896,7 @@ SelectBox.displayName = 'SelectBox';
 SelectBox.defaultProps = {
   options: [],
   inLabel: false,
-  block: false,
+  block: true,
   validate: [],
   errorMessage: '',
   multiple: false,
