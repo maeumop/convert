@@ -18,8 +18,8 @@ import {
 import uuid from 'react-uuid';
 import { TimeoutId } from 'node_modules/@reduxjs/toolkit/dist/query/core/buildMiddleware/types';
 import Icon from '@mdi/react';
-import './style.scss';
 import { CSSTransition } from 'react-transition-group';
+import './style.scss';
 
 export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref) => {
   const elementId = uuid();
@@ -34,6 +34,7 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
   const [selectedValue, setSelectedValue] = useState<string | string[]>(props.multiple ? [] : '');
   const [optionList, setOptionList] = useState<SelectBoxItem[]>([...props.options]);
   const [searchInputValue, setSearchInputValue] = useState<string>('');
+  // const [transitionStatus, setTransitionStatus] = useState<boolean>(false);
 
   const transitionRef = useRef<HTMLDivElement>(null);
   const selectBoxRef = useRef<HTMLDivElement>(null);
@@ -46,7 +47,7 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
     width: '',
   });
 
-  let [selectedKeyIndex, setSelectedKeyIndex] = useState<number>(0);
+  const [selectedKeyIndex, setSelectedKeyIndex] = useState<number>(0);
 
   useEffect(() => {
     if (props.errorMessage) {
@@ -128,15 +129,32 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
     isSelectAll ? 'checked ' : '',
   ].join(''), [isSelectAll]);
 
+  const selectBoxClassName = useMemo<string>(() => [
+    'control-wrap ',
+    props.disabled ? 'disabled ' : '',
+    props.readonly ? 'readonly ' : '',
+    message !== '' ? 'error ' : '',
+    isShowOption ? 'active ': '',
+  ].join(''), [message, isShowOption]);
+
+  const feedbackClassName = useMemo<string>(() => [
+    'feedback ',
+    errorTransition ? 'error ' : ''
+  ].join(''), [errorTransition]);
+
   const getShowText = useMemo<string[]>(() => {
-    if (props.btnAccept) {
+    if (props.btnAccept === true) {
       return Array.isArray(selectedText) ? selectedText : [selectedText];
     }
 
     let values: string[] = Array.isArray(props.value) ? props.value : [props.value];
 
+    const txt = props.options
+      .filter(option => values.includes(option.value))
+      .map(({ text }) => text);
+
     return props.options.filter(option => values.includes(option.value)).map(({ text }) => text);
-  }, [props.btnAccept, props.value]);
+  }, [selectedText, props.value]);
 
   /**
    * 초기 modelValue 바로 대입할시 selectedValue의 값이 modelValue 메모리를 참조
@@ -261,8 +279,8 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
         setSelectedValue((selectedValue as string[]).splice(indexOf, 1));
         setSelectedText((selectedText as string[]).splice(indexOf, 1));
       } else {
-        setSelectedValue(v);
-        setSelectedText(text);
+        setSelectedValue([...selectedValue, v]);
+        setSelectedText([...selectedText, text]);
       }
     } else {
       setSelectedValue(v);
@@ -352,11 +370,7 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
         const windowHeight: number = window.innerHeight;
         const rect = selectBoxRef.current?.getBoundingClientRect() as DOMRect;
 
-        if (windowHeight / 2 < rect.top) {
-          setShowBottom(true);
-        } else {
-          setShowBottom(false);
-        }
+        setShowBottom((windowHeight / 2 < rect.top) ? true : false);
 
         setLayerPos({
           left: `${rect.left}px`,
@@ -376,10 +390,8 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
 
         setOptionList([...props.options]);
 
-        // nextTick(() => {
-        //   const selected = ul.value?.querySelector('.selected');
-        //   selected?.scrollIntoView();
-        // });
+        const selected = ulRef.current?.querySelector('.selected');
+        selected?.scrollIntoView();
       }
     }
   };
@@ -406,10 +418,8 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
           setOptionList([...props.options]);
         }
 
-        // nextTick(() => {
-        //   const li = ul.value?.querySelector<HTMLLIElement>('.option-item');
-        //   li?.scrollIntoView({ block: 'center' });
-        // });
+        const li = ulRef.current?.querySelector<HTMLLIElement>('.option-item');
+        li?.scrollIntoView({ block: 'center' });
       }, 300);
     }
   };
@@ -447,22 +457,6 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
       }
 
       updateValue([...selectedValue]);
-    }
-  };
-
-  /**
-   * 본 객체 외의 부분을 클릭할 경우 옵션 목록 숨김
-   *
-   * @param evt
-   */
-  const outSideClickEvent = (evt: MouseEvent): void => {
-    const target = evt.target as HTMLBodyElement;
-
-    if (isShowOption) {
-      if (!selectBoxRef.current?.contains(target)) {
-        noneAccept();
-        toggleOption();
-      }
     }
   };
 
@@ -523,11 +517,11 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
     props.onChange(selectedValue);
   };
 
-  const onKeyHandler = (event: ChangeEvent | ReactKeyboardEvent | KeyboardEvent): void => {
+  const onKeyHandler = (event: ReactKeyboardEvent | KeyboardEvent): void => {
     event.stopPropagation();
 
     const code = event.code.toLowerCase();
-    const keyCodes = ['arrowup', 'arrowdown', 'enter', 'tab']
+    const keyCodes = ['arrowup', 'arrowdown', 'enter', 'tab', 'escape'];
 
     if (!keyCodes.includes(code)) {
       return;
@@ -538,22 +532,21 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
 
       if (li) {
         const len = li.length;
-        const code = event.code.toLowerCase();
 
         if (code === 'arrowdown' && selectedKeyIndex < len) {
-          setSelectedKeyIndex(selectedKeyIndex + 1);
-
-          if (selectedKeyIndex >= len) {
+          if (selectedKeyIndex + 1 >= len) {
             setSelectedKeyIndex(0);
+          } else {
+            setSelectedKeyIndex(selectedKeyIndex + 1);
           }
 
           len && li[selectedKeyIndex].scrollIntoView({ block: 'center' });
 
         } else if (code === 'arrowup' && selectedKeyIndex >= -1) {
-          setSelectedKeyIndex(selectedKeyIndex - 1);
-
-          if (selectedKeyIndex === -1) {
+          if (selectedKeyIndex - 1 === -1) {
             setSelectedKeyIndex(len - 1);
+          } else {
+            setSelectedKeyIndex(selectedKeyIndex - 1);
           }
 
           len && li[selectedKeyIndex].scrollIntoView({ block: 'center' });
@@ -578,39 +571,53 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
         }
       }
 
+      if (code === 'escape') {
+        setIsShowOption(false);
+        noneAccept();
+
+        // eventPhase : 0 = none / 1 = capture / 2 = target / 3 = bubbling
+        // 모달 내부의 SelectBox 키 이벤트와 동시에 Modal도 같이 이벤트 수행이 되기 때문에
+        // SelectBox 이벤트만 수행 후, 이벤트 전파 중지.
+        const eventPhase: number = event.eventPhase;
+
+        (eventPhase === 1 || eventPhase === 2) && event.stopPropagation();
+      }
+
       searchText(event);
     }
   };
 
-  const onEscapeKeyHandler = (event: ReactKeyboardEvent): void => {
-    const code = event.code.toLowerCase();
+  const onAnimationEnd = (event: AnimationEvent) => {
+    setErrorTransition(false);
+  };
 
-    if (isShowOption && code === 'escape') {
-      setIsShowOption(false);
-      noneAccept();
+  /**
+   * 본 객체 외의 부분을 클릭할 경우 옵션 목록 숨김
+   *
+   * @param evt
+   */
+  const onOutsideClickEvent = (evt: MouseEvent) => {
+    const target = evt.target as HTMLBodyElement;
 
-      // eventPhase : 0 = none / 1 = capture / 2 = target / 3 = bubbling
-      // 모달 내부의 SelectBox 키 이벤트와 동시에 Modal도 같이 이벤트 수행이 되기 때문에
-      // SelectBox 이벤트만 수행 후, 이벤트 전파 중지.
-      const eventPhase: number = event.eventPhase;
+    console.log(isShowOption);
 
-      (eventPhase === 1 || eventPhase === 2) && event.stopPropagation();
+    if (isShowOption) {
+      if (selectBoxRef.current && !selectBoxRef.current.contains(target)) {
+        noneAccept();
+        toggleOption();
+      }
     }
   };
 
   useEffect(() => {
     if (isShowOption) {
-      document.addEventListener('keydown', onKeyHandler);
+      document.addEventListener('click', onOutsideClickEvent);
     }
 
     return () => {
-      document.removeEventListener('keydown', onKeyHandler);
+      document.removeEventListener('click', onOutsideClickEvent);
     }
-  }, [isShowOption]);
-
-  const onAnimationEnd = (event: AnimationEvent) => {
-    setErrorTransition(false);
-  };
+  }, [isShowOption])
 
   useEffect(() => {
     setDefaultModelValue();
@@ -619,25 +626,14 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
       setScrollEvent(mainRef.current);
     }
 
-    document.addEventListener('click', outSideClickEvent);
-
     return () => {
-      document.removeEventListener('click', outSideClickEvent);
-      document.removeEventListener('keydown', onKeyHandler);
+      document.removeEventListener('click', onOutsideClickEvent);
 
       if (eventParentElement) {
         eventParentElement.removeEventListener('scroll', parentScrollEvent);
       }
     }
   }, []);
-
-  const selectBoxClassName = useMemo<string>(() => [
-    'control-wrap',
-    props.disabled ? 'disabled' : '',
-    props.readonly ? 'readonly' : '',
-    message ? 'error' : '',
-    isShowOption ? 'active': '',
-  ].join(' '), []);
 
   useImperativeHandle(ref, () => {
     return {
@@ -656,7 +652,7 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
         id={elementId}
         style={{ width: styleWidth }}
         className={wrapperClassName}
-        onKeyDown={onEscapeKeyHandler}
+        onKeyDown={onKeyHandler}
       >
         {!props.inLabel && (
           <div className="options-wrap">
@@ -726,7 +722,7 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
                             </span>
                           )}
 
-                          {getShowText[0]}
+                          {getShowText.join('')}
                           {getShowText.length > 1 && (<>&nbsp;+ {getShowText.length - 1}</>)}
                         </>
                       )}
@@ -777,7 +773,7 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
               className="btn-clear"
               onClick={clearValue}
             >
-              <Icon size="20" path={mdiCloseCircle} />
+              <Icon color="#888" size="20" path={mdiCloseCircle} />
             </a>
           )}
 
@@ -794,6 +790,10 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
             in={isShowOption}
             nodeRef={transitionRef}
             classNames={showBottom ? 'option-items-bottom' : 'option-items'}
+            onExit={() => {
+              onBlur();
+              props.blurValidate && check();
+            }}
           >
             <div
               ref={transitionRef}
@@ -842,12 +842,12 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
                       ].join('')}
                       onClick={(event) => selectOption(event, item.value)}
                     >
-                      <template v-if="props.multiple">
+                      {props.multiple && (
                         <Icon
                           className="checkbox"
                           path={isOptionSelected(item.value) ? mdiCheckboxMarked : mdiCheckboxBlankOutline}
                         />
-                      </template>
+                      )}
                       { item.text }
                     </li>
                   ))}
@@ -881,7 +881,7 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
         {(message && !props.hideMessage) && (
           <div
             ref={feedbackRef}
-            className={['feedbackRef', errorTransition ? 'error' : ''].join(' ')}
+            className={feedbackClassName}
             onAnimationEnd={onAnimationEnd}
           >
             { message }

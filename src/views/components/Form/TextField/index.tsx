@@ -129,7 +129,7 @@ export const TextField = forwardRef<TextFieldModel, TextFieldProps>((props, ref)
       // validate check
       if (props.validate?.length) {
         for (let i = 0; i < props.validate.length; i++) {
-          let result: string | boolean = props.validate[i](checkValue);
+          const result: string | boolean = props.validate[i](checkValue);
 
           if (typeof result === 'string') {
             if (!silence) {

@@ -19,7 +19,7 @@ export const Forms = () => {
   const [userId, setUserId] = useState<string>('');
   const [number, setNumber] = useState<number>(0);
   const [checked, setChecked] = useState<string[]>(['']);
-  const [selectBox, setSelectBox] = useState<string>('');
+  const [selectBox, setSelectBox] = useState<string | string[]>('');
   const checkedItems: CheckButtonItem[] = [
     { text: 'test1', value: '1' },
     { text: 'test2', value: '2' },
@@ -41,7 +41,7 @@ export const Forms = () => {
   const numberRef = useRef<NumberFormatModel>(null);
   const selectRef = useRef<SelectBoxModel>(null);
 
-  const rules: ValidationRule[] = [v => !!v || '필수 입력사항입니다.'];
+  const rules: ValidationRule[] = [v => !!v || '필수 입력사항입니다.', v => !(!v.length) || '필수 선택사항입니다.'];
 
   const onTextChange = (v: string) => {
     setUserId(v);
@@ -60,7 +60,7 @@ export const Forms = () => {
   };
 
   const onSelectChange = (event: string | string[]) => {
-    console.log(event);
+    setSelectBox(event);
   }
 
   return (
@@ -93,10 +93,12 @@ export const Forms = () => {
           </li>
           <li>
             <SelectBox
+              placeholder="선택하기"
               searchable={true}
               ref={selectRef}
               options={options}
               value={selectBox}
+              validate={rules}
               onChange={onSelectChange}
             />
           </li>

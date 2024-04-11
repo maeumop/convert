@@ -3,7 +3,7 @@ export interface KeyIndex<T> {
 }
 
 export interface ValidationRule {
-  (v: any): boolean | string;
+  (v: string | string[]): boolean | string;
 }
 
 // selectbox, checkbox 사용 옵션
