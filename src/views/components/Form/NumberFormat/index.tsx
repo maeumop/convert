@@ -14,43 +14,7 @@ export const NumberFormat = forwardRef<NumberFormatModel, NumberFormatProps>((pr
   const [errorTransition, setErrorTransition] = useState<boolean>(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    // 임의로 지정된 에러가 있는 경우 에러 표기
-    if (props.errorMessage) {
-      setMessage(props.errorMessage);
-      setIsValidate(false);
-      setErrorTransition(true);
-    } else {
-      resetValidate();
-    }
-
-    if (!props.disabled) {
-      // 외부에서 model이 업데이트 되도 유효성 검사
-      if (props.value) {
-        resetValidate();
-
-        if (inputRef.current?.value) {
-          setCommaValue(format(props.value));
-        }
-      }
-    }
-  }, [props.errorMessage, props.value]);
-
-  useEffect(() => {
-    if (props.disabled) {
-      resetValidate();
-    }
-  }, [props.disabled]);
-
-  const successful = useMemo<boolean>(() => isValidate && checkPass, [isValidate, checkPass]);
-  const wrapperStyle = useMemo<string>(() => [
-    'numberformat-wrap',
-    props.label && 'with-label',
-    !isValidate && 'error',
-    successful && 'success',
-    props.block && 'block'
-  ].join(' '), [props.label, isValidate, successful, props.block]);
+  const feedbackRef = useRef<HTMLDivElement>(null);
 
   /**
    * 입력 폼이 focus, blur 됐을때 해당 값을 체크 하여 값을 비우거나 0으로 채워 준다.
@@ -150,6 +114,10 @@ export const NumberFormat = forwardRef<NumberFormatModel, NumberFormatProps>((pr
     setErrorTransition(false);
   };
 
+  const onAnimationEnd = () => {
+    setErrorTransition(false);
+  }
+
   const wrapperWidth = useMemo<CSSProperties>(() => {
     if (props.width) {
       return { width: props.width };
@@ -159,21 +127,51 @@ export const NumberFormat = forwardRef<NumberFormatModel, NumberFormatProps>((pr
   }, [props.width]);
 
   const labelClassMemo = useMemo<string>(() => [
-    'input-label',
-    !isValidate && 'error'
+    'input-label ',
+    !isValidate ? 'error ' : '',
   ].join(' '), [isValidate])
 
   const feedbackMemo = useMemo<string>(() => [
-    'feedback',
-    errorTransition && 'error'
+    'feedback ',
+    errorTransition ? 'error ' : '',
   ].join(' '), [errorTransition]);
 
-  const feedback = useRef<HTMLDivElement>(null);
+  const successful = useMemo<boolean>(() => isValidate && checkPass, [isValidate, checkPass]);
+  const wrapperStyle = useMemo<string>(() => [
+    'numberformat-wrap ',
+    props.label ? 'with-label ' : '',
+    !isValidate ? 'error ' : '',
+    successful ? 'success ' : '',
+    props.block ? 'block ' : '',
+  ].join(' '), [props.label, isValidate, successful]);
 
-  const onAnimationEnd = () => {
-    console.log('here!');
-    setErrorTransition(false);
-  }
+  useEffect(() => {
+    // 임의로 지정된 에러가 있는 경우 에러 표기
+    if (props.errorMessage) {
+      setMessage(props.errorMessage);
+      setIsValidate(false);
+      setErrorTransition(true);
+    } else {
+      resetValidate();
+    }
+
+    if (!props.disabled) {
+      // 외부에서 model이 업데이트 되도 유효성 검사
+      if (props.value) {
+        resetValidate();
+
+        if (inputRef.current?.value) {
+          setCommaValue(format(props.value));
+        }
+      }
+    }
+  }, [props.errorMessage, props.value]);
+
+  useEffect(() => {
+    if (props.disabled) {
+      resetValidate();
+    }
+  }, [props.disabled]);
 
   useEffect(() => {
     if (props.autofocus && inputRef.current?.value) {
@@ -225,7 +223,7 @@ export const NumberFormat = forwardRef<NumberFormatModel, NumberFormatProps>((pr
 
       {message && !props.hideMessage && (
         <div
-          ref={ feedback }
+          ref={feedbackRef}
           className={feedbackMemo}
           onAnimationEnd={ onAnimationEnd }
         >
@@ -238,21 +236,13 @@ export const NumberFormat = forwardRef<NumberFormatModel, NumberFormatProps>((pr
 
 NumberFormat.displayName = 'NumberFormat';
 NumberFormat.defaultProps = {
-  label: undefined,
-  placeholder: undefined,
+  placeholder: '',
   validate: [],
-  errorMessage: undefined,
+  errorMessage: '',
   disabled: false,
   block: true,
   autofocus: false,
   readonly: false,
   required: false,
   hideMessage: false,
-  onBlur: undefined,
-  onFocus: undefined,
-  onKeyDown: undefined,
-  onKeyUp: undefined,
-  onClick: undefined,
-  width: undefined,
-  maxLength: undefined,
 }

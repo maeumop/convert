@@ -17,32 +17,6 @@ export const TextField = forwardRef<TextFieldModel, TextFieldProps>((props, ref)
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    // 임의로 지정된 에러가 있는 경우 에러 아이콘 표기
-    if (props.errorMessage !== undefined) {
-      setMessage(props.errorMessage);
-      setIsValidate(false);
-      setCheckPass(false);
-      setErrorTransition(true);
-    } else {
-      setMessage('');
-      setIsValidate(true);
-      setCheckPass(true);
-      setErrorTransition(false);
-    }
-  }, [props.errorMessage]);
-
-  useEffect(() => {
-    resetValidate();
-  }, [props.validate]);
-
-  useEffect(() => {
-    if (props.value || props.disabled) {
-      resetValidate();
-    }
-  }, [props.value, props.disabled]);
-
-  const successful = useMemo<boolean>(() => isValidate && checkPass, [isValidate, checkPass]);
   const styleWidth = useMemo<CSSProperties>(() => {
     if (typeof props.width === 'number') {
       return { width: `${props.width}px` };
@@ -52,23 +26,31 @@ export const TextField = forwardRef<TextFieldModel, TextFieldProps>((props, ref)
 
     return {};
   }, [props.width]);
+  const successful = useMemo<boolean>(() => isValidate && checkPass, [isValidate, checkPass]);
+  const wrapperStyle = useMemo<string>(() => [
+    'input-wrap ',
+    props.label ? 'with-label ' : '',
+    !isValidate ? 'error ' : '',
+    successful ? 'success ' : '',
+    props.block ? 'block ' : '',
+  ].join(' '), [props.label, isValidate, successful]);
 
-  const wrapperStyle = useMemo<string>(() => {
-    return ['input-wrap', props.label && 'with-label',
-      !isValidate && 'error', successful && 'success',
-      props.block && 'block'
-    ].join(' ');
-  }, [props.label, isValidate, successful]);
-
-  const labelStyle = useMemo<string>(() => {
-    return ['input-label', isValidate && 'error'].join(' ');
-  }, [isValidate]);
+  const labelStyle = useMemo<string>(() => [
+    'input-label ',
+    isValidate ? 'error ' : '',
+  ].join(''), [isValidate]);
 
   const inputStyleClass = useMemo<string>(() => [
-    message && 'error',
-    (props.icon && props.iconLeft) && 'left-space',
-    (props.icon && !props.iconLeft) && 'right-space',
-  ].join(' '), [message, props.icon, props.iconLeft]);
+    message ? 'error ' : '',
+    (props.icon && props.iconLeft) ? 'left-space ' : '',
+    (props.icon && !props.iconLeft) ? 'right-space ' :  '',
+  ].join(''), [message]);
+
+  const feedbackMemo = useMemo<string>(() => `feedback ${errorTransition && 'error'}`, [errorTransition]);
+
+  const clearButtonShow = useMemo<boolean>(
+    () => props.clearable !== undefined && props.value !== '' && !props.disabled && !props.readonly
+  , [props.clearable, props.value, props.disabled, props.readonly]);
 
   const updateValue = (event: FormEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     if (!props.disabled) {
@@ -87,10 +69,6 @@ export const TextField = forwardRef<TextFieldModel, TextFieldProps>((props, ref)
   const clearValue = (): void => {
     props.onChange('');
   };
-
-  const clearButtonShow = useMemo<boolean>(
-    () => props.clearable !== undefined && props.value !== '' && !props.disabled && !props.readonly
-    , [props.clearable, props.value, props.disabled, props.readonly]);
 
   const check = (silence?: boolean): boolean => {
     if (props.disabled) {
@@ -186,7 +164,30 @@ export const TextField = forwardRef<TextFieldModel, TextFieldProps>((props, ref)
     setErrorTransition(false);
   }
 
-  const feedbackMemo = useMemo<string>(() => `feedback ${errorTransition && 'error'}`, [errorTransition]);
+  useEffect(() => {
+    // 임의로 지정된 에러가 있는 경우 에러 아이콘 표기
+    if (props.errorMessage !== undefined) {
+      setMessage(props.errorMessage);
+      setIsValidate(false);
+      setCheckPass(false);
+      setErrorTransition(true);
+    } else {
+      setMessage('');
+      setIsValidate(true);
+      setCheckPass(true);
+      setErrorTransition(false);
+    }
+  }, [props.errorMessage]);
+
+  useEffect(() => {
+    resetValidate();
+  }, [props.validate]);
+
+  useEffect(() => {
+    if (props.value || props.disabled) {
+      resetValidate();
+    }
+  }, [props.value, props.disabled]);
 
   useEffect(() => {
     if (props.autofocus) {
@@ -212,25 +213,21 @@ export const TextField = forwardRef<TextFieldModel, TextFieldProps>((props, ref)
       style={styleWidth}
     >
       <div className="options-wrap">
-        {
-          props.label !== null && (
+        {props.label !== null && (
           <label className={labelStyle}>
             {props.label}
             {props.required && (<span className="required">*</span>)}
           </label>
         )}
 
-        {
-          props.isCounting && props.maxLength && (
+        {props.isCounting && props.maxLength && (
           <div className="counting">
-            {props.value.length}
-            / {props.maxLength}
+            {props.value.length} / {props.maxLength}
           </div>
         )}
       </div>
 
-      {
-        props.multiline ? (
+      {props.multiline ? (
         <textarea
           ref={textareaRef}
           className={inputStyleClass}
@@ -269,8 +266,7 @@ export const TextField = forwardRef<TextFieldModel, TextFieldProps>((props, ref)
               onClick={props.onClick}
             />
 
-            {
-              clearButtonShow &&
+            {clearButtonShow &&
               <a
                 href="#"
                 onClick={clearValue}
@@ -283,8 +279,7 @@ export const TextField = forwardRef<TextFieldModel, TextFieldProps>((props, ref)
               </a>
             }
           </div>
-          {
-            (props.icon && props.onIconClick !== null) && (
+          {(props.icon && props.onIconClick !== null) && (
             <a href="#" onClick={props.onIconClick}>
               <Icon
                 size="24"
@@ -294,8 +289,7 @@ export const TextField = forwardRef<TextFieldModel, TextFieldProps>((props, ref)
               />
             </a>
           )}
-          {
-            (props.icon && props.onIconClick === null) && (
+          {(props.icon && props.onIconClick === null) && (
             <Icon
               size="24"
               className={props.iconLeft ? 'left' : undefined}
@@ -307,8 +301,7 @@ export const TextField = forwardRef<TextFieldModel, TextFieldProps>((props, ref)
         </div>
       )}
 
-      {
-        (message && !props.hideMessage) && (
+      {(message && !props.hideMessage) && (
         <div
           ref={feedbackRef}
           className={feedbackMemo}

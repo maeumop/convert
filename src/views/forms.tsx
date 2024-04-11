@@ -17,6 +17,7 @@ import '@/assets/forms.scss';
 
 export const Forms = () => {
   console.log('build');
+
   const [userId, setUserId] = useState<string>('');
   const [number, setNumber] = useState<number>(0);
   const [checked, setChecked] = useState<string[]>(['']);
@@ -43,7 +44,10 @@ export const Forms = () => {
   const numberRef = useRef<NumberFormatModel>(null);
   const selectRef = useRef<SelectBoxModel>(null);
 
-  const rules: ValidationRule[] = [v => !!v || '필수 입력사항입니다.', v => !(!v.length) || '필수 선택사항입니다.'];
+  const rules: {[index: string]: ValidationRule[]} = {
+    input: [v => !!v || '필수 입력사항입니다.'],
+    select: [v => !(!v.length) || '필수 선택사항입니다.']
+  };
 
   const onTextChange = (v: string) => {
     setUserId(v);
@@ -81,7 +85,7 @@ export const Forms = () => {
               required={true}
               onChange={onTextChange}
               value={userId}
-              validate={rules}
+              validate={rules.input}
               onKeyDown={onKeyDown}
               clearable
             />
@@ -94,7 +98,7 @@ export const Forms = () => {
               required={true}
               onChange={onNumberChange}
               value={number}
-              validate={rules}
+              validate={rules.input}
             />
           </li>
           <li>
@@ -104,7 +108,7 @@ export const Forms = () => {
               ref={selectRef}
               options={options}
               value={selectBox}
-              validate={rules}
+              validate={rules.select}
               onChange={onSelectChange}
             />
           </li>
