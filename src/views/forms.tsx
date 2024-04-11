@@ -7,12 +7,13 @@ import { StyledButton } from './components/StyledButton';
 import { TextFieldModel } from './components/Form/TextField/types';
 import { NumberFormatModel } from './components/Form/NumberFormat/types';
 import { CheckButton } from './components/Form/CheckButton';
+import { SwitchButton } from './components/Form/SwitchButton';
 import { SelectBox } from './components/Form/SelectBox';
 import type { ValidationRule } from '@/views/components/types';
 import type { ValidateFormModel } from './components/Form/ValidateForm/types';
-import '@/assets/forms.scss';
 import { CheckButtonItem } from './components/Form/CheckButton/types';
 import { SelectBoxItem, SelectBoxModel } from './components/Form/SelectBox/types';
+import '@/assets/forms.scss';
 
 export const Forms = () => {
   console.log('build');
@@ -20,6 +21,8 @@ export const Forms = () => {
   const [number, setNumber] = useState<number>(0);
   const [checked, setChecked] = useState<string[]>(['']);
   const [selectBox, setSelectBox] = useState<string | string[]>('');
+  const [switchValue, setSwitchValue] = useState<string | boolean>(false);
+
   const checkedItems: CheckButtonItem[] = [
     { text: 'test1', value: '1' },
     { text: 'test2', value: '2' },
@@ -34,7 +37,6 @@ export const Forms = () => {
     { text: '그림4', value: '4' },
     { text: '그림5', value: '5' },
   ];
-
 
   const formRef = useRef<ValidateFormModel>(null);
   const textRef = useRef<TextFieldModel>(null);
@@ -61,7 +63,11 @@ export const Forms = () => {
 
   const onSelectChange = (event: string | string[]) => {
     setSelectBox(event);
-  }
+  };
+
+  const onSwitchChange = (v: string | boolean) => {
+    setSwitchValue(v);
+  };
 
   return (
     <div className="forms">
@@ -100,6 +106,12 @@ export const Forms = () => {
               value={selectBox}
               validate={rules}
               onChange={onSelectChange}
+            />
+          </li>
+          <li>
+            <SwitchButton
+              onChange={onSwitchChange}
+              value={switchValue}
             />
           </li>
           <li>

@@ -149,10 +149,6 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
 
     let values: string[] = Array.isArray(props.value) ? props.value : [props.value];
 
-    const txt = props.options
-      .filter(option => values.includes(option.value))
-      .map(({ text }) => text);
-
     return props.options.filter(option => values.includes(option.value)).map(({ text }) => text);
   }, [selectedText, props.value]);
 

@@ -198,14 +198,12 @@ export const TextField = forwardRef<TextFieldModel, TextFieldProps>((props, ref)
     }
   }, []);
 
-  useImperativeHandle(ref, () => {
-    return {
-      element: document.getElementById(elementId),
-      check,
-      resetForm,
-      resetValidate,
-    }
-  });
+  useImperativeHandle(ref, () => ({
+    element: document.getElementById(elementId),
+    check,
+    resetForm,
+    resetValidate,
+  }));
 
   return (
     <div
