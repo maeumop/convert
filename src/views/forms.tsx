@@ -58,7 +58,7 @@ export const Forms = () => {
   };
 
   const onClick = () => {
-    console.log(formRef.current?.validate());
+    formRef.current?.validate();
   };
 
   const onKeyDown = (event: KeyboardEvent) => {
@@ -75,27 +75,27 @@ export const Forms = () => {
 
   return (
     <div className="forms">
-      <ValidateForm ref={ formRef }>
+      <ValidateForm ref={formRef}>
         <ul>
           <li>
             <TextField
-              label="test"
+              required
+              clearable
+              label="text field"
               placeholder="아이디 입력"
               ref={textRef}
-              required={true}
               onChange={onTextChange}
               value={userId}
               validate={rules.input}
               onKeyDown={onKeyDown}
-              clearable
             />
           </li>
           <li>
             <NumberFormat
-              label="test"
+              required
+              label="number format"
               placeholder="숫자 입력"
               ref={numberRef}
-              required={true}
               onChange={onNumberChange}
               value={number}
               validate={rules.input}
@@ -103,8 +103,8 @@ export const Forms = () => {
           </li>
           <li>
             <SelectBox
+              searchable
               placeholder="선택하기"
-              searchable={true}
               ref={selectRef}
               options={options}
               value={selectBox}

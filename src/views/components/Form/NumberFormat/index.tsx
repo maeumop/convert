@@ -5,6 +5,8 @@ import uuid from 'react-uuid';
 import './style.scss';
 
 export const NumberFormat = forwardRef<NumberFormatModel, NumberFormatProps>((props, ref) => {
+  console.log('number build');
+
   const elementId: string = uuid();
 
   const [commaValue, setCommaValue] = useState <string>('0');
@@ -74,7 +76,7 @@ export const NumberFormat = forwardRef<NumberFormatModel, NumberFormatProps>((pr
     if (!props.errorMessage) {
       // validate check
       if (props.validate.length) {
-        for (let i: number = 0; i < props.validate.length; i++) {
+        for (let i = 0; i < props.validate.length; i++) {
           let result: string | boolean = props.validate[i](props.value);
 
           if (typeof result === 'string') {
@@ -183,14 +185,12 @@ export const NumberFormat = forwardRef<NumberFormatModel, NumberFormatProps>((pr
     }
   }, []);
 
-  useImperativeHandle(ref, () => {
-    return {
-      element: document.getElementById(elementId),
-      check,
-      resetForm,
-      resetValidate,
-    }
-  });
+  useImperativeHandle(ref, () => ({
+    element: document.getElementById(elementId),
+    check,
+    resetForm,
+    resetValidate,
+  }));
 
   return (
     <div
@@ -210,15 +210,15 @@ export const NumberFormat = forwardRef<NumberFormatModel, NumberFormatProps>((pr
 
       <input
         type="text"
-        ref={ inputRef }
-        placeholder={ props.placeholder }
-        disabled={ props.disabled }
-        readOnly={ props.readonly }
-        maxLength={ props.maxLength }
-        onInput={ updateValue }
-        onFocus={ zeroCheck }
-        onBlur={ zeroCheck }
-        value={ commaValue }
+        ref={inputRef}
+        placeholder={props.placeholder}
+        disabled={props.disabled}
+        readOnly={props.readonly}
+        maxLength={props.maxLength}
+        onInput={updateValue}
+        onFocus={zeroCheck}
+        onBlur={zeroCheck}
+        value={commaValue}
       />
 
       {message && !props.hideMessage && (

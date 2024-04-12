@@ -76,8 +76,7 @@ export const TextField = forwardRef<TextFieldModel, TextFieldProps>((props, ref)
     }
 
     // 임의로 지정된 에러가 없는 경우
-    if (props.errorMessage === '') {
-
+    if (!props.errorMessage) {
       // trim 되지 않은 value 값
       const checkValue: string = (props.multiline
         ? textareaRef.current?.value
@@ -301,7 +300,7 @@ export const TextField = forwardRef<TextFieldModel, TextFieldProps>((props, ref)
         </div>
       )}
 
-      {(message && !props.hideMessage) && (
+      {message && !props.hideMessage && (
         <div
           ref={feedbackRef}
           className={feedbackMemo}

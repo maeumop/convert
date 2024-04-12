@@ -1,7 +1,7 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, ReactElement } from 'react';
 
 export interface ValidateFormProps {
-  children: ReactNode;
+  children: ReactElement;
 }
 
 export interface ValidateFormModel {

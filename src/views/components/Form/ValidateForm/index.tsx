@@ -1,5 +1,5 @@
 import { useState, useRef, forwardRef, useImperativeHandle } from 'react';
-import type { FormEvent } from 'react';
+import type { ReactElement, RefObject } from 'react';
 import type { ValidateFormModel, ValidateFormProps } from './types';
 import './style.scss';
 
@@ -12,7 +12,6 @@ export const ValidateForm = forwardRef<ValidateFormModel, ValidateFormProps>((pr
 
   let checkState: boolean;
   let firstEl: HTMLElement | null = null;
-
   let isSilence: boolean = false;
 
   const validate = (silence: boolean = false): boolean => {
@@ -34,20 +33,29 @@ export const ValidateForm = forwardRef<ValidateFormModel, ValidateFormProps>((pr
 
   const resetForm = (): void => {
     if (formRef.current) {
-      explore(formRef.current, 'reset');
+      explore(formRef.current.props.children, 'reset');
     }
   };
 
   const resetValidate = (): void => {
     if (formRef.current) {
-      explore(formRef.current, 'resetValidate');
+      explore(formRef.current.prosp.children, 'resetValidate');
     }
   };
 
   const componentTypeCheck = (el: any): boolean => {
-    const names: string[] = [
-      'TextField', 'NumberFormat', 'SelectBox',
-      'SwitchButton', 'CheckButton', 'DatePicker', 'ValidateWrap', 'CodeMirrorForm'
+    if (el.ref === null) {
+      return false;
+    }
+
+    const names = [
+      'TextField',
+      'NumberFormat',
+      'SelectBox',
+      'SwitchButton',
+      'CheckButton',
+      'DatePicker',
+      'ValidateWrap'
     ];
 
     if (el.ref !== null && el.ref.current !== null) {
@@ -61,7 +69,7 @@ export const ValidateForm = forwardRef<ValidateFormModel, ValidateFormProps>((pr
     return false;
   };
 
-  const validateCheck = (el: any, flag: string): void => {
+  const validateCheck = (el: { ref: RefObject<any> }, flag: string): void => {
     if (el.ref.current) {
       if (flag === 'reset') {
         el.ref.current.resetForm();
@@ -80,12 +88,12 @@ export const ValidateForm = forwardRef<ValidateFormModel, ValidateFormProps>((pr
     }
   };
 
-  const explore = (el: any, flag: string = 'dom'): void => {
+  const explore = (el: ReactElement, flag: string = 'dom'): void => {
     if (Array.isArray(el.props.children)) {
       const len: number = el.props.children.length;
 
       if (len > 0) {
-        const nodes: any = el.props.children;
+        const nodes: ReactElement[] = el.props.children;
 
         // vue node 전체(chilren)을 탐색 하여 chidren이 또 있는 경우 재귀한다.
         for (let i = 0; i < len; i++) {
@@ -94,14 +102,12 @@ export const ValidateForm = forwardRef<ValidateFormModel, ValidateFormProps>((pr
           }
 
           if (componentTypeCheck(nodes[i])) {
-            validateCheck(nodes[i], flag);
+            validateCheck(nodes[i].props.children, flag);
           }
         }
       }
-    } else {
-      if (componentTypeCheck(el.props.children)) {
-        validateCheck(el.props.children, flag);
-      }
+    } else if (componentTypeCheck(el.props.children)) {
+      validateCheck(el.props.children, flag);
     }
   };
 
@@ -109,24 +115,18 @@ export const ValidateForm = forwardRef<ValidateFormModel, ValidateFormProps>((pr
     setIsCover(protect);
   };
 
-  const onSubmit = (event: FormEvent): void => {
-    event.preventDefault();
-  };
-
-  useImperativeHandle(ref, () => {
-    return {
-      formProtection,
-      resetValidate,
-      resetForm,
-      validate
-    }
-  });
+  useImperativeHandle(ref, () => ({
+    formProtection,
+    resetValidate,
+    resetForm,
+    validate
+  }));
 
   return (
     <form
       ref={formRef}
       className={isCover ? 'validate-form' : ''}
-      onSubmit={onSubmit}
+      onSubmit={(event) => event.preventDefault()}
     >
       { props.children }
       {isCover && (
