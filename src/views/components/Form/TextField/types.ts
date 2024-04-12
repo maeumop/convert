@@ -1,5 +1,6 @@
 import type { FocusEvent, KeyboardEvent, MouseEvent, MouseEventHandler } from 'react';
 import type { ValidationRule } from '../../types';
+import { type CaseReducer, type PayloadAction } from '@reduxjs/toolkit';
 
 export interface TextFieldProps {
   value: string;
@@ -50,3 +51,17 @@ export const textFieldType = {
 } as const;
 
 export type TextFieldType = typeof textFieldType[keyof typeof textFieldType];
+
+export interface TextFieldState {
+  isValidate: boolean;
+  checkPass: boolean;
+  message: string;
+  errorTransition: boolean;
+}
+
+export type TextFieldReducer = {
+  setIsValidate: CaseReducer<TextFieldState, PayloadAction<boolean>>;
+  setCheckPass: CaseReducer<TextFieldState, PayloadAction<boolean>>;
+  setMessage: CaseReducer<TextFieldState, PayloadAction<string>>;
+  setErrorTransition: CaseReducer<TextFieldState, PayloadAction<boolean>>;
+}

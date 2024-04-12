@@ -7,12 +7,14 @@ import { StyledButton } from './components/StyledButton';
 import { TextFieldModel } from './components/Form/TextField/types';
 import { NumberFormatModel } from './components/Form/NumberFormat/types';
 import { CheckButton } from './components/Form/CheckButton';
+import { MessageBox } from './components/MessageBox';
 import { SwitchButton } from './components/Form/SwitchButton';
 import { SelectBox } from './components/Form/SelectBox';
 import type { ValidationRule } from '@/views/components/types';
 import type { ValidateFormModel } from './components/Form/ValidateForm/types';
 import { CheckButtonItem } from './components/Form/CheckButton/types';
 import { SelectBoxItem, SelectBoxModel } from './components/Form/SelectBox/types';
+import { Provider } from 'react-redux';
 import '@/assets/forms.scss';
 
 export const Forms = () => {
@@ -123,6 +125,8 @@ export const Forms = () => {
           </li>
         </ul>
       </ValidateForm>
+
+      {/* <MessageBox /> */}
     </div>
   );
 }

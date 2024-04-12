@@ -33,7 +33,7 @@ export const TextField = forwardRef<TextFieldModel, TextFieldProps>((props, ref)
     !isValidate ? 'error ' : '',
     successful ? 'success ' : '',
     props.block ? 'block ' : '',
-  ].join(' '), [props.label, isValidate, successful]);
+  ].join(' '), [props.label, props.block, isValidate, successful]);
 
   const labelStyle = useMemo<string>(() => [
     'input-label ',
@@ -44,7 +44,7 @@ export const TextField = forwardRef<TextFieldModel, TextFieldProps>((props, ref)
     message ? 'error ' : '',
     (props.icon && props.iconLeft) ? 'left-space ' : '',
     (props.icon && !props.iconLeft) ? 'right-space ' :  '',
-  ].join(''), [message]);
+  ].join(''), [message, props.icon, props.iconLeft]);
 
   const feedbackMemo = useMemo<string>(() => `feedback ${errorTransition && 'error'}`, [errorTransition]);
 
@@ -157,11 +157,11 @@ export const TextField = forwardRef<TextFieldModel, TextFieldProps>((props, ref)
     if (props.onBlur) {
       props.onBlur(event);
     }
-  }
+  };
 
   const onAminationEnd = () => {
     setErrorTransition(false);
-  }
+  };
 
   useEffect(() => {
     // 임의로 지정된 에러가 있는 경우 에러 아이콘 표기
@@ -332,4 +332,4 @@ TextField.defaultProps = {
   hideMessage: false,
   block: true,
   iconColor: 'grey',
-}
+};

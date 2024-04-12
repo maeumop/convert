@@ -1,4 +1,4 @@
-@import '@/assets/scss/abstracts/_variables.scss';
+@import '../common.scss';
 
 $primary: map-get($theme-colors, 'primary');
 $secondary: map-get($theme-colors, 'secondasry');
