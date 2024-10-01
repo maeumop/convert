@@ -13,7 +13,7 @@ export const SwitchButton = forwardRef<SwitchButtonModel, SwitchButtonProps>((pr
   const [onError, setOnError] = useState<boolean>(false);
   const [errorTransition, setErrorTransition] = useState<boolean>(false);
   const [message, setMessage] = useState<string>('');
-  // const [isValidate, setIsValidate] = useState<boolean>(true);
+  const [isValidate, setIsValidate] = useState<boolean>(true);
 
   const feedbackRef = useRef<HTMLDivElement>(null);
 
@@ -45,7 +45,7 @@ export const SwitchButton = forwardRef<SwitchButtonModel, SwitchButtonProps>((pr
               : `${labelText}을(를) 선택해주세요.`
           );
           setOnError(true);
-          // setIsValidate(false);
+          setIsValidate(false);
           setErrorTransition(true);
         }
 
@@ -63,7 +63,7 @@ export const SwitchButton = forwardRef<SwitchButtonModel, SwitchButtonProps>((pr
   const resetValidate = (): void => {
     setMessage('');
     setOnError(false);
-    // setIsValidate(true);
+    setIsValidate(true);
     setErrorTransition(false);
   };
 
@@ -146,7 +146,7 @@ export const SwitchButton = forwardRef<SwitchButtonModel, SwitchButtonProps>((pr
 SwitchButton.displayName = 'SwitchButton';
 SwitchButton.defaultProps = {
   label: ['미설정', '설정'],
-  validate: false,
+  validate: [],
   trueValue: true,
   falseValue: false,
   color: switchButtonColors.primary,

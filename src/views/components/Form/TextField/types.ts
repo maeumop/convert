@@ -1,8 +1,10 @@
 import type { FocusEvent, KeyboardEvent, MouseEvent, MouseEventHandler } from 'react';
 import type { ValidationRule } from '../../types';
 import { type CaseReducer, type PayloadAction } from '@reduxjs/toolkit';
+import { FieldValues } from 'react-hook-form';
 
-export interface TextFieldProps {
+export interface TextFieldProps extends FieldValues {
+  name: string;
   value: string;
   onChange: (v: string) => void;
   onBlur?: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
@@ -17,7 +19,7 @@ export interface TextFieldProps {
   height?: string | number;
   width?: string | number;
   block?: boolean;
-  validate?: ValidationRule[];
+  rules?: object;
   blurValidate?: boolean;
   pattern?: [RegExp, string?];
   errorMessage?: string;

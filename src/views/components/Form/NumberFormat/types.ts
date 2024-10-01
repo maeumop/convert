@@ -11,7 +11,7 @@ export interface NumberFormatProps {
   onClick?: (event: MouseEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   label?: string;
   placeholder?: string;
-  validate: ValidationRule[];
+  validate?: ValidationRule[];
   errorMessage?: string;
   disabled?: boolean;
   block?: boolean;

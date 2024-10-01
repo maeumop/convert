@@ -14,7 +14,7 @@ export const btnColors = {
 export type BtnColors = typeof btnColors[keyof typeof btnColors];
 
 export interface StyledButtonProps {
-  onClick: (event: MouseEvent<HTMLAnchorElement>) => void;
+  onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
   children: ReactElement;
   color?: BtnColors;
   class?: string;

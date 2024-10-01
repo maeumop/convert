@@ -54,7 +54,7 @@ export const StyledButton = (props: StyledButtonProps)=> {
   const onClick = (event: MouseEvent<HTMLAnchorElement>): void => {
     event.preventDefault();
 
-    if (props.onClick !== null) {
+    if (props.onClick !== undefined) {
       props.onClick(event);
     }
   }

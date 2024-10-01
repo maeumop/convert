@@ -1,13 +1,13 @@
-import { useState, useRef, useEffect, useMemo, useImperativeHandle, forwardRef } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import type { CSSProperties, FocusEvent, FormEvent } from 'react';
 import type { TextFieldModel, TextFieldProps } from './types';
-import Icon from '@mdi/react';
 import { mdiCloseCircle } from '@mdi/js';
-import uuid from 'react-uuid';
+import Icon from '@mdi/react';
 import './style.scss';
+import { useController, useFormContext } from 'react-hook-form';
 
-export const TextField = forwardRef<TextFieldModel, TextFieldProps>((props, ref) => {
-  const elementId = uuid();
+export const TextField = (props: TextFieldProps) => {
+  const { register } = useFormContext();
 
   const [isValidate, setIsValidate] = useState<boolean>(true);
   const [checkPass, setCheckPass] = useState<boolean>(false);
@@ -33,20 +33,18 @@ export const TextField = forwardRef<TextFieldModel, TextFieldProps>((props, ref)
     !isValidate ? 'error ' : '',
     successful ? 'success ' : '',
     props.block ? 'block ' : '',
-  ].join(' '), [props.label, props.block, isValidate, successful]);
+  ].join('').trim(), [props.label, props.block, isValidate, successful]);
 
   const labelStyle = useMemo<string>(() => [
     'input-label ',
     isValidate ? 'error ' : '',
-  ].join(''), [isValidate]);
+  ].join('').trim(), [isValidate]);
 
   const inputStyleClass = useMemo<string>(() => [
     message ? 'error ' : '',
     (props.icon && props.iconLeft) ? 'left-space ' : '',
     (props.icon && !props.iconLeft) ? 'right-space ' :  '',
-  ].join(''), [message, props.icon, props.iconLeft]);
-
-  const feedbackMemo = useMemo<string>(() => `feedback ${errorTransition && 'error'}`, [errorTransition]);
+  ].join('').trim(), [message, props.icon, props.iconLeft]);
 
   const clearButtonShow = useMemo<boolean>(
     () => props.clearable !== undefined && props.value !== '' && !props.disabled && !props.readonly
@@ -70,73 +68,6 @@ export const TextField = forwardRef<TextFieldModel, TextFieldProps>((props, ref)
     props.onChange('');
   };
 
-  const check = (silence?: boolean): boolean => {
-    if (props.disabled) {
-      return true;
-    }
-
-    // 임의로 지정된 에러가 없는 경우
-    if (!props.errorMessage) {
-      // trim 되지 않은 value 값
-      const checkValue: string = (props.multiline
-        ? textareaRef.current?.value
-        : inputRef.current?.value
-      ) || '';
-
-      // pattern check
-      if (Array.isArray(props.pattern)) {
-        const [regExp, errMsg] = props.pattern;
-
-        if (regExp) {
-          if (regExp.test(checkValue)) {
-            setMessage('');
-          } else {
-            if (!silence) {
-              setMessage(errMsg ? errMsg : '형식이 일치 하지 않습니다.');
-              setIsValidate(false);
-              setCheckPass(false);
-              setErrorTransition(true);
-            }
-
-            return false;
-          }
-        }
-      }
-
-      // validate check
-      if (props.validate?.length) {
-        for (let i = 0; i < props.validate.length; i++) {
-          const result: string | boolean = props.validate[i](checkValue);
-
-          if (typeof result === 'string') {
-            if (!silence) {
-              setMessage(result);
-              setIsValidate(false);
-              setCheckPass(false);
-              setErrorTransition(true);
-            }
-
-            return false;
-          } else {
-            setMessage('');
-          }
-        }
-      }
-
-      setIsValidate(true);
-      setCheckPass(true);
-
-      return true;
-    }
-
-    setErrorTransition(true);
-
-    return false;
-  };
-
-  const resetForm = (): void => {
-    props.onChange('');
-  };
 
   const resetValidate = (): void => {
     setIsValidate(true);
@@ -147,20 +78,10 @@ export const TextField = forwardRef<TextFieldModel, TextFieldProps>((props, ref)
     }
   };
 
-  const feedbackRef = useRef<HTMLDivElement>(null);
-
   const onBlur = (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    if (props.blurValidate) {
-      check();
-    }
-
     if (props.onBlur) {
       props.onBlur(event);
     }
-  };
-
-  const onAminationEnd = () => {
-    setErrorTransition(false);
   };
 
   useEffect(() => {
@@ -198,36 +119,15 @@ export const TextField = forwardRef<TextFieldModel, TextFieldProps>((props, ref)
     }
   }, []);
 
-  useImperativeHandle(ref, () => ({
-    element: document.getElementById(elementId),
-    check,
-    resetForm,
-    resetValidate,
-  }));
-
   return (
     <div
-      id={elementId}
       className={wrapperStyle}
       style={styleWidth}
     >
-      <div className="options-wrap">
-        {props.label !== null && (
-          <label className={labelStyle}>
-            {props.label}
-            {props.required && (<span className="required">*</span>)}
-          </label>
-        )}
-
-        {props.isCounting && props.maxLength && (
-          <div className="counting">
-            {props.value.length} / {props.maxLength}
-          </div>
-        )}
-      </div>
-
       {props.multiline ? (
         <textarea
+          {...register(props.name)}
+          name={props.name}
           ref={textareaRef}
           className={inputStyleClass}
           style={{ height: props.height && `${props.height}px` }}
@@ -248,6 +148,8 @@ export const TextField = forwardRef<TextFieldModel, TextFieldProps>((props, ref)
         <div className="with-slot">
           <div className="input-relative">
             <input
+              {...register(props.name)}
+              name={props.name}
               ref={inputRef}
               type={props.type}
               className={inputStyleClass}
@@ -300,18 +202,9 @@ export const TextField = forwardRef<TextFieldModel, TextFieldProps>((props, ref)
         </div>
       )}
 
-      {message && !props.hideMessage && (
-        <div
-          ref={feedbackRef}
-          className={feedbackMemo}
-          onAnimationEnd={onAminationEnd}
-        >
-          {message}
-        </div>
-      )}
     </div>
   );
-});
+};
 
 TextField.displayName = 'TextField';
 TextField.defaultProps = {

@@ -1,25 +1,22 @@
-import { useState, useRef, useEffect } from 'react';
-import type { KeyboardEvent } from 'react';
+import { useState } from 'react';
 import { TextField } from '@/views/components/Form/TextField';
 import { NumberFormat } from './components/Form/NumberFormat';
 import { ValidateForm } from './components/Form/ValidateForm';
 import { StyledButton } from './components/StyledButton';
-import { TextFieldModel } from './components/Form/TextField/types';
-import { NumberFormatModel } from './components/Form/NumberFormat/types';
-import { CheckButton } from './components/Form/CheckButton';
-import { MessageBox } from './components/MessageBox';
 import { SwitchButton } from './components/Form/SwitchButton';
-import { SelectBox } from './components/Form/SelectBox';
-import type { ValidationRule } from '@/views/components/types';
-import type { ValidateFormModel } from './components/Form/ValidateForm/types';
 import { CheckButtonItem } from './components/Form/CheckButton/types';
-import { SelectBoxItem, SelectBoxModel } from './components/Form/SelectBox/types';
-import { Provider } from 'react-redux';
+import { SelectBoxItem } from './components/Form/SelectBox/types';
+import { SelectBox } from './components/Form/SelectBox';
 import '@/assets/forms.scss';
 
-export const Forms = () => {
-  console.log('build');
+interface FormEx {
+  userId: string;
+  number: string;
+  selector: string;
+}
 
+
+export const Forms = () => {
   const [userId, setUserId] = useState<string>('');
   const [number, setNumber] = useState<number>(0);
   const [checked, setChecked] = useState<string[]>(['']);
@@ -41,55 +38,20 @@ export const Forms = () => {
     { text: '그림5', value: '5' },
   ];
 
-  const formRef = useRef<ValidateFormModel>(null);
-  const textRef = useRef<TextFieldModel>(null);
-  const numberRef = useRef<NumberFormatModel>(null);
-  const selectRef = useRef<SelectBoxModel>(null);
-
-  const rules: {[index: string]: ValidationRule[]} = {
-    input: [v => !!v || '필수 입력사항입니다.'],
-    select: [v => !(!v.length) || '필수 선택사항입니다.']
-  };
-
-  const onTextChange = (v: string) => {
-    setUserId(v);
-  };
-
-  const onNumberChange = (v: number) => {
-    setNumber(v);
-  };
-
-  const onClick = () => {
-    formRef.current?.validate();
-  };
-
-  const onKeyDown = (event: KeyboardEvent) => {
-    console.log(event.code);
-  };
-
-  const onSelectChange = (event: string | string[]) => {
-    setSelectBox(event);
-  };
-
-  const onSwitchChange = (v: string | boolean) => {
-    setSwitchValue(v);
-  };
 
   return (
     <div className="forms">
-      <ValidateForm ref={formRef}>
+      <ValidateForm>
         <ul>
           <li>
             <TextField
+              name="test"
               required
               clearable
               label="text field"
               placeholder="아이디 입력"
-              ref={textRef}
-              onChange={onTextChange}
               value={userId}
-              validate={rules.input}
-              onKeyDown={onKeyDown}
+              onChange={() => null}
             />
           </li>
           <li>
@@ -97,36 +59,30 @@ export const Forms = () => {
               required
               label="number format"
               placeholder="숫자 입력"
-              ref={numberRef}
-              onChange={onNumberChange}
               value={number}
-              validate={rules.input}
+              onChange={() => null}
             />
           </li>
           <li>
             <SelectBox
               searchable
               placeholder="선택하기"
-              ref={selectRef}
               options={options}
               value={selectBox}
-              validate={rules.select}
-              onChange={onSelectChange}
+              onChange={() => null}
             />
           </li>
           <li>
             <SwitchButton
-              onChange={onSwitchChange}
               value={switchValue}
+              onChange={() => null}
             />
           </li>
           <li>
-            <StyledButton onClick={onClick}>Test</StyledButton>
+            <StyledButton onClick={() => submit()}>Test</StyledButton>
           </li>
         </ul>
       </ValidateForm>
-
-      {/* <MessageBox /> */}
     </div>
   );
 }

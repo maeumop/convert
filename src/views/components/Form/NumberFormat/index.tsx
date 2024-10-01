@@ -5,8 +5,6 @@ import uuid from 'react-uuid';
 import './style.scss';
 
 export const NumberFormat = forwardRef<NumberFormatModel, NumberFormatProps>((props, ref) => {
-  console.log('number build');
-
   const elementId: string = uuid();
 
   const [commaValue, setCommaValue] = useState <string>('0');
