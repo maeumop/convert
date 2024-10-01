@@ -1,22 +1,27 @@
 @import '../common.scss';
 
-$primary: map-get($theme-colors, 'primary');
-$secondary: map-get($theme-colors, 'secondasry');
-$danger: map-get($theme-colors, 'danger');
-
 .hide-scroll {
   overflow: hidden;
 }
 
-.msg-box-fade-enter-from,
-.msg-box-fade-leave-to { opacity: 0 }
-.msg-box-fade-enter-active,
-.msg-box-fade-leave-active { transition: opacity 0.2s ease-out; }
-
-.msg-box-scale-enter-from,
-.msg-box-scale-leave-to { opacity: 0; transform: scale(0.4); }
-.msg-box-scale-enter-active,
-.msg-box-scale-leave-active { transition: all 0.2s ease-out; }
+.msg-box-enter {
+  opacity: 0;
+  transform: scale(0.8);
+}
+.msg-box-exit {
+  opacity: 1;
+  transform: scale(1);
+}
+.msg-box-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: all 200ms ease-out;
+}
+.msg-box-exit-active {
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 200ms ease-out;
+}
 
 .msg-box-bg {
   position: fixed;
@@ -37,17 +42,16 @@ $danger: map-get($theme-colors, 'danger');
     border-radius: 4px;
     max-height: 95vh;
     max-width: 95vw;
-    // box-shadow: $box-shadow;
-    padding: 30px 20px;
+    min-width: 200px;
 
     .title {
       box-sizing: border-box;
       border-radius: 4px 4px 0 0;
-      font-size: 18px;
-      font-weight: 500;
-      color: $gray-800;
+      font-size: 15px;
+      font-weight: 700;
+      color: #494949;
       margin: 0;
-      padding-bottom: 8px;
+      padding: 8px 14px;
 
       .close-popup {
         display: block;
@@ -56,52 +60,49 @@ $danger: map-get($theme-colors, 'danger');
 
     .contents {
       font-size: 14px;
-      font-weight: 400;
-      color: $gray-800;
+      font-weight: 500;
+      color: #5b5b5b;
       box-sizing: border-box;
       overflow-y: auto;
-      display: block;
-      padding-bottom: 20px;
+      display: flex;
+      align-items: center;
+      padding: 14px;
+      min-height: 80px;
     }
 
     .actions {
+      border-top: 1px solid #f4f4f4;
       border-radius: 0 0 4px 4px;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
 
       a {
-        font-size: 15px;
+        font-size: 13px;
         font-weight: 500;
         text-decoration: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
         box-sizing: border-box;
         text-align: center;
-        transition: all 0.2s;
-      }
-
-      .btn-okay {
-        color: #fff;
-        background-color: $primary;
+        display: flex;
+        flex: 1;
+        align-items: center;
+        justify-content: center;
+        padding: 0 10px;
         height: 42px;
+        background-color: transparent;
 
-        &:hover {
-          background-color: darken($primary, 10);
+        &.btn-okay {
+          color: rgb(119, 152, 231);
+
+          .loading {
+            transform-origin: center center;
+            animation: spinner 1s infinite;
+          }
         }
 
-        .loading {
-          transform-origin: center center;
-          animation: spinner 1s infinite;
-        }
-      }
-
-      .btn-cancel {
-        margin-top: 8px;
-        color: $gray-800;
-        border: 1px solid $gray-300;
-        height: 42px;
-
-        &:hover {
-          background-color: $gray-100;
+        &.btn-cancel {
+          color: grey;
+          border-right: 1px solid $gray-300;
         }
       }
     }

@@ -1,9 +1,7 @@
 import type { FocusEvent, KeyboardEvent, MouseEvent, MouseEventHandler } from 'react';
-import type { ValidationRule } from '../../types';
 import { type CaseReducer, type PayloadAction } from '@reduxjs/toolkit';
-import { FieldValues } from 'react-hook-form';
 
-export interface TextFieldProps extends FieldValues {
+export interface TextFieldProps {
   name: string;
   value: string;
   onChange: (v: string) => void;
@@ -14,22 +12,17 @@ export interface TextFieldProps extends FieldValues {
   onClick?: (event: MouseEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   type?: TextFieldType;
   rows?: number;
-  label?: string;
   placeholder?: string;
   height?: string | number;
   width?: string | number;
   block?: boolean;
-  rules?: object;
-  blurValidate?: boolean;
-  pattern?: [RegExp, string?];
+  rules?: Object;
   errorMessage?: string;
   maxLength?: number;
   multiline?: boolean;
   disabled?: boolean;
-  readonly?: boolean;
-  autofocus?: boolean;
+  readOnly?: boolean;
   isCounting?: boolean;
-  required?: boolean;
   hideMessage?: boolean;
   icon?: string;
   iconLeft?: boolean;
@@ -49,10 +42,10 @@ export const textFieldType = {
   TXT: 'text',
   NUM: 'number',
   TEL: 'tel',
-  PWD: 'password'
+  PWD: 'password',
 } as const;
 
-export type TextFieldType = typeof textFieldType[keyof typeof textFieldType];
+export type TextFieldType = (typeof textFieldType)[keyof typeof textFieldType];
 
 export interface TextFieldState {
   isValidate: boolean;
@@ -66,4 +59,4 @@ export type TextFieldReducer = {
   setCheckPass: CaseReducer<TextFieldState, PayloadAction<boolean>>;
   setMessage: CaseReducer<TextFieldState, PayloadAction<string>>;
   setErrorTransition: CaseReducer<TextFieldState, PayloadAction<boolean>>;
-}
+};

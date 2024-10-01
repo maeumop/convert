@@ -1,12 +1,8 @@
-import type { ReactNode, ReactElement } from 'react';
+import type { ReactElement } from 'react';
 
 export interface ValidateFormProps {
+  name?: string;
   children: ReactElement;
-}
-
-export interface ValidateFormModel {
-  formProtection(protect?: boolean): void
-  resetForm(): void,
-  validate(silence?: boolean): boolean
-  resetValidate(): void
+  cover?: boolean;
+  onSubmit: (data: any) => void;
 }

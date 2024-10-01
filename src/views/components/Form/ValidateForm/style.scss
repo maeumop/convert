@@ -9,3 +9,27 @@
     background-color: rgba(#fff, 0.3);
   }
 }
+
+.validate-msg {
+  color: red;
+  font-size: 11px;
+  margin-bottom: 5px;
+  padding-left: 3px;
+  animation-name: shakeword;
+  animation-duration: 150ms;
+  animation-iteration-count: 3;
+}
+
+@keyframes shakeword {
+  0% {
+    transform: translateX(0);
+  }
+
+  50% {
+    transform: translateX(10px);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}

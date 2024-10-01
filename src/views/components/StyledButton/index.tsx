@@ -1,11 +1,10 @@
-import { useMemo } from 'react';
-import type { MouseEvent } from 'react';
+import React, { useMemo } from 'react';
 import Icon from '@mdi/react';
 import type { StyledButtonProps } from './types';
 import { mdiGoogleCirclesExtended } from '@mdi/js';
 import './style.scss';
 
-export const StyledButton = (props: StyledButtonProps)=> {
+function styledButton(props: StyledButtonProps) {
   const buttonClass = useMemo<string>(() => {
     return [
       'btn',
@@ -17,9 +16,9 @@ export const StyledButton = (props: StyledButtonProps)=> {
       props.small && 'small',
       props.xSmall && 'xsmall',
       props.outline && 'outline',
-      (!props.small && !props.xSmall && props.block) && 'block',
+      !props.small && !props.xSmall && props.block && 'block',
       props.class,
-      (props.disabled || props.loading) && 'disabled'
+      (props.disabled || props.loading) && 'disabled',
     ].join(' ');
   }, [
     props.text,
@@ -51,64 +50,60 @@ export const StyledButton = (props: StyledButtonProps)=> {
     return '20';
   }, [props.text, props.large, props.small, props.xSmall]);
 
-  const onClick = (event: MouseEvent<HTMLAnchorElement>): void => {
-    event.preventDefault();
-
-    if (props.onClick !== undefined) {
-      props.onClick(event);
-    }
-  }
-
   return (
-    <a
-      href={props.href}
-      className={ buttonClass }
-      onClick={ onClick }
+    <button
+      type={props.type}
+      className={buttonClass}
+      onClick={(event) => {
+        if (props.onClick instanceof Function) {
+          props.onClick(event);
+        }
+      }}
     >
       <div className="btn-wrap">
         {!props.onlyIcon ? (
           <>
             {props.loading ? (
-              <Icon className="loading" path={ mdiGoogleCirclesExtended } />
+              <Icon className="loading" path={mdiGoogleCirclesExtended} />
             ) : (
-                <>
-                  {props.icon ? (
-                    <>
-                      {props.icon && !props.iconRight && (
-                        <Icon
-                          className={[props.dropMenuToggle && 'rotate'].join('')}
-                          size={ iconSize }
-                          path={ props.icon }
-                        />
-                      )}
+              <>
+                {props.icon ? (
+                  <>
+                    {props.icon && !props.iconRight && (
+                      <Icon
+                        className={[props.dropMenuToggle && 'rotate'].join('')}
+                        size={iconSize}
+                        path={props.icon}
+                      />
+                    )}
 
-                      <slot></slot>
+                    <slot></slot>
 
-                      {props.icon && props.iconRight && (
-                        <Icon
-                          className={[props.dropMenuToggle && 'rotate'].join('')}
-                          size={ iconSize }
-                          path={ props.icon }
-                        />
-                      )}
-                    </>
-                  ) : (
-                    props.children
-                  )}
-                </>
-              )}
+                    {props.icon && props.iconRight && (
+                      <Icon
+                        className={[props.dropMenuToggle && 'rotate'].join('')}
+                        size={iconSize}
+                        path={props.icon}
+                      />
+                    )}
+                  </>
+                ) : (
+                  props.children
+                )}
+              </>
+            )}
           </>
         ) : (
           <div className="only-icon">
-            <Icon size={ iconSize } path={ props.icon } />
+            <Icon size={iconSize} path={props.icon} />
           </div>
         )}
       </div>
-    </a>
+    </button>
   );
 }
 
-StyledButton.defaultProps = {
+styledButton.defaultProps = {
   color: 'primary',
   class: null,
   href: '#',
@@ -126,4 +121,11 @@ StyledButton.defaultProps = {
   outline: false,
   dropMenuToggle: false,
   label: '',
+  type: 'button',
+};
+
+function isEqual(prev: StyledButtonProps, next: StyledButtonProps) {
+  return prev === next;
 }
+
+export const StyledButton = React.memo(styledButton, isEqual);

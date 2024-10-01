@@ -1,20 +1,18 @@
-import { useState, useMemo, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { FormEvent, FocusEvent, CSSProperties } from 'react';
-import type { NumberFormatProps, NumberFormatModel } from './types';
-import uuid from 'react-uuid';
+import type { NumberFormatProps } from './types';
 import './style.scss';
+import { useFormContext } from 'react-hook-form';
+import { ValidateMessage } from '../ValidateForm';
 
-export const NumberFormat = forwardRef<NumberFormatModel, NumberFormatProps>((props, ref) => {
-  const elementId: string = uuid();
+// TODO react-form-hooks 값을 반환하는 부분에서 콤마가 유지되는 현상 수정 필요
+export const NumberFormat = (props: NumberFormatProps) => {
+  const {
+    register,
+    formState: { errors },
+  } = useFormContext();
 
-  const [commaValue, setCommaValue] = useState <string>('0');
-  const [isValidate, setIsValidate] = useState<boolean>(true);
-  const [checkPass, setCheckPass] = useState<boolean>(false);
-  const [message, setMessage] = useState<string>('');
-  const [errorTransition, setErrorTransition] = useState<boolean>(false);
-
-  const inputRef = useRef<HTMLInputElement>(null);
-  const feedbackRef = useRef<HTMLDivElement>(null);
+  const [commaValue, setCommaValue] = useState<string>('0');
 
   /**
    * 입력 폼이 focus, blur 됐을때 해당 값을 체크 하여 값을 비우거나 0으로 채워 준다.
@@ -22,16 +20,14 @@ export const NumberFormat = forwardRef<NumberFormatModel, NumberFormatProps>((pr
    * @param { Event } evt
    */
   const zeroCheck = (evt: FocusEvent<HTMLInputElement>) => {
-    if (evt.type === 'focus' && inputRef.current?.value === '0') {
+    const el = evt.target;
+
+    if (evt.type === 'focus' && el.value === '0') {
       setCommaValue('');
       props.onChange(0);
-    } else if (evt.type === 'blur' && !inputRef.current?.value.length) {
+    } else if (evt.type === 'blur' && !el.value.length) {
       setCommaValue('0');
       props.onChange(0);
-
-      if (!props.onBlur) {
-        check();
-      }
     }
   };
 
@@ -41,9 +37,10 @@ export const NumberFormat = forwardRef<NumberFormatModel, NumberFormatProps>((pr
    * @param v
    * @return format number string
    */
-  const format = (v: number | string): string => (v === '-') ? v : new Intl.NumberFormat().format(Number(v));
+  const format = (v: number | string): string =>
+    v === '-' ? v : new Intl.NumberFormat().format(Number(v));
 
-  const updateValue = (evt: FormEvent<HTMLInputElement>): void => {
+  const onChange = (evt: FormEvent<HTMLInputElement>): void => {
     if (props.disabled) {
       return;
     }
@@ -55,68 +52,14 @@ export const NumberFormat = forwardRef<NumberFormatModel, NumberFormatProps>((pr
       .replace(/\-{2,}/g, '-')
       .replace(/^$/, '');
 
-    value = (value.charAt(0) === '-')
-      ? '-'.concat(value.replace(/[-]/g, ''))
-      : value.replace(/[-]/g, '');
+    value =
+      value.charAt(0) === '-'
+        ? `-${value.replace(/[-]/g, '')}`
+        : value.replace(/[-]/g, '');
 
-    if (value) {
-      setCommaValue(format(value));
-      props.onChange(isNaN(Number(value)) ? 0 : Number(value));
-    }
+    setCommaValue(format(value));
+    props.onChange(isNaN(Number(value)) ? 0 : Number(value));
   };
-
-  const check = (silence: boolean = false): boolean => {
-    if (props.disabled) {
-      return true;
-    }
-
-    // 임의로 지정된 에러가 없는 경우
-    if (!props.errorMessage) {
-      // validate check
-      if (props.validate.length) {
-        for (let i = 0; i < props.validate.length; i++) {
-          let result: string | boolean = props.validate[i](props.value);
-
-          if (typeof result === 'string') {
-            if (!silence) {
-              setMessage(result);
-              setIsValidate(false);
-              setCheckPass(false);
-              setErrorTransition(true);
-            }
-
-            return false;
-          } else {
-            setMessage('');
-          }
-        }
-      }
-
-      setIsValidate(true);
-      setCheckPass(true);
-
-      return true;
-    }
-
-    setErrorTransition(true);
-
-    return false;
-  };
-
-  const resetForm = (): void => {
-    setCommaValue('0');
-    props.onChange(0)
-  };
-
-  const resetValidate = (): void => {
-    setMessage('');
-    setIsValidate(true);
-    setErrorTransition(false);
-  };
-
-  const onAnimationEnd = () => {
-    setErrorTransition(false);
-  }
 
   const wrapperWidth = useMemo<CSSProperties>(() => {
     if (props.width) {
@@ -126,121 +69,47 @@ export const NumberFormat = forwardRef<NumberFormatModel, NumberFormatProps>((pr
     return {};
   }, [props.width]);
 
-  const labelClassMemo = useMemo<string>(() => [
-    'input-label ',
-    !isValidate ? 'error ' : '',
-  ].join(' '), [isValidate])
-
-  const feedbackMemo = useMemo<string>(() => [
-    'feedback ',
-    errorTransition ? 'error ' : '',
-  ].join(' '), [errorTransition]);
-
-  const successful = useMemo<boolean>(() => isValidate && checkPass, [isValidate, checkPass]);
-  const wrapperStyle = useMemo<string>(() => [
-    'numberformat-wrap ',
-    props.label ? 'with-label ' : '',
-    !isValidate ? 'error ' : '',
-    successful ? 'success ' : '',
-    props.block ? 'block ' : '',
-  ].join(' '), [props.label, isValidate, successful]);
+  const wrapperStyle = useMemo<string>(
+    () => ['numberformat-wrap ', props.block ? 'block ' : ''].join(' '),
+    [props.block],
+  );
 
   useEffect(() => {
-    // 임의로 지정된 에러가 있는 경우 에러 표기
-    if (props.errorMessage) {
-      setMessage(props.errorMessage);
-      setIsValidate(false);
-      setErrorTransition(true);
-    } else {
-      resetValidate();
-    }
-
-    if (!props.disabled) {
-      // 외부에서 model이 업데이트 되도 유효성 검사
-      if (props.value) {
-        resetValidate();
-
-        if (inputRef.current?.value) {
-          setCommaValue(format(props.value));
-        }
-      }
-    }
-  }, [props.errorMessage, props.value]);
-
-  useEffect(() => {
-    if (props.disabled) {
-      resetValidate();
-    }
-  }, [props.disabled]);
-
-  useEffect(() => {
-    if (props.autofocus && inputRef.current?.value) {
-      inputRef.current.focus();
-    }
-
-    if (props.value && inputRef.current?.value) {
+    if (props.value) {
       setCommaValue(format(props.value));
     }
   }, []);
 
-  useImperativeHandle(ref, () => ({
-    element: document.getElementById(elementId),
-    check,
-    resetForm,
-    resetValidate,
-  }));
-
   return (
     <div
-      id={elementId}
-      className={ wrapperStyle }
-      style={ wrapperWidth }
+      className={`${errors[props.name]?.message ? 'error ' : ''}${wrapperStyle}`}
+      style={wrapperWidth}
     >
-
-      <div className="options-wrap">
-        {props.label && (
-          <label className={labelClassMemo}>
-            { props.label }
-            <span className="required" v-if="props.required">*</span>
-          </label>
-        )}
-      </div>
-
       <input
+        id={props.name}
         type="text"
-        ref={inputRef}
+        {...register(props.name, {
+          ...props.rules,
+          onChange,
+          onBlur: zeroCheck,
+        })}
         placeholder={props.placeholder}
         disabled={props.disabled}
-        readOnly={props.readonly}
+        readOnly={props.readOnly}
         maxLength={props.maxLength}
-        onInput={updateValue}
         onFocus={zeroCheck}
-        onBlur={zeroCheck}
         value={commaValue}
       />
 
-      {message && !props.hideMessage && (
-        <div
-          ref={feedbackRef}
-          className={feedbackMemo}
-          onAnimationEnd={ onAnimationEnd }
-        >
-          { message }
-        </div>
-      )}
+      <ValidateMessage message={errors[props.name]?.message as string} />
     </div>
   );
-});
+};
 
 NumberFormat.displayName = 'NumberFormat';
 NumberFormat.defaultProps = {
   placeholder: '',
-  validate: [],
-  errorMessage: '',
   disabled: false,
   block: true,
-  autofocus: false,
   readonly: false,
-  required: false,
-  hideMessage: false,
-}
+};

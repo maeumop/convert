@@ -1,0 +1,58 @@
+.validate-form {
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+
+  input {
+    border: 1px solid #d2d2d2;
+    min-height: 40px;
+    max-height: 40px;
+    margin-bottom: 5px;
+    border-radius: 4px;
+    color: #525252;
+    padding: 0 10px;
+
+    &::placeholder {
+      color: #ababab;
+      font-size: 12px;
+    }
+  }
+
+  .button {
+    max-height: 40px;
+    min-height: 40px;
+    text-align: center;
+    border: 1px solid blue;
+    color: white;
+    background-color: blue;
+    vertical-align: middle;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .alert {
+    color: red;
+    font-size: 11px;
+    margin-bottom: 5px;
+    padding-left: 3px;
+    animation-name: shakeword;
+    animation-duration: 150ms;
+    animation-iteration-count: 3;
+  }
+
+  @keyframes shakeword {
+    0% {
+      transform: translateX(0);
+    }
+
+    50% {
+      transform: translateX(10px);
+    }
+
+    100% {
+      transform: translateX(0);
+    }
+  }
+}

@@ -28,7 +28,7 @@ $btn-box-shadow: none;
   &:not(.text) {
     display: inline-block;
     box-shadow: $btn-box-shadow;
-    // border-radius: $border-radius;
+    border-radius: 5px;
     border: 0;
     padding: 0 16px;
     height: 40px;

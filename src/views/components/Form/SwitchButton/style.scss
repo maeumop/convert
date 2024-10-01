@@ -7,7 +7,7 @@
 
   @each $color in $colors {
     &.#{$color} {
-      input[type=checkbox]:checked {
+      input[type='checkbox']:checked {
         & + span {
           background-color: map-get($theme-colors, $color);
         }
@@ -28,8 +28,8 @@
     font-size: 14px;
     margin: 0;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: flex-start;
+    justify-content: baseline;
 
     &.checkbox {
       display: flex;
@@ -45,8 +45,7 @@
       }
     }
 
-
-    input[type=checkbox] {
+    input[type='checkbox'] {
       position: absolute;
       clip: rect(0, 0, 0, 0);
 
@@ -81,11 +80,10 @@
       }
     }
 
-
     &.small {
       line-height: 19px;
 
-      input[type=checkbox] {
+      input[type='checkbox'] {
         & + span {
           width: 30px;
           height: 15px;
@@ -106,7 +104,7 @@
       }
 
       svg {
-        height: 16px
+        height: 16px;
       }
     }
   }

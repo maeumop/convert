@@ -8,13 +8,15 @@ export const btnColors = {
   danger: 'danger',
   secondary: 'secondary',
   dark: 'dark',
-  'gray-800': 'gray-800'
+  'gray-800': 'gray-800',
 } as const;
 
-export type BtnColors = typeof btnColors[keyof typeof btnColors];
+export type ButtonType = 'button' | 'submit';
+
+export type BtnColors = (typeof btnColors)[keyof typeof btnColors];
 
 export interface StyledButtonProps {
-  onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
+  onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
   children: ReactElement;
   color?: BtnColors;
   class?: string;
@@ -32,5 +34,5 @@ export interface StyledButtonProps {
   large?: boolean;
   outline?: boolean;
   dropMenuToggle?: boolean;
+  type: ButtonType;
 }
-

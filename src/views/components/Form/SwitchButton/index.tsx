@@ -1,153 +1,92 @@
-import { useState, useRef, useMemo, useEffect, useImperativeHandle, forwardRef } from 'react';
+import { useMemo } from 'react';
 import type { ChangeEvent } from 'react';
 import { switchButtonColors } from './types';
-import type { SwitchButtonModel, SwitchButtonProps } from './types';
+import type { SwitchButtonProps } from './types';
 import { mdiCheckboxMarked, mdiCheckboxBlankOutline } from '@mdi/js';
-import uuid from 'react-uuid';
 import Icon from '@mdi/react';
 import './style.scss';
+import { useController, useFormContext } from 'react-hook-form';
+import { ValidateMessage } from '../ValidateForm';
 
-export const SwitchButton = forwardRef<SwitchButtonModel, SwitchButtonProps>((props, ref) => {
-  const elementId = uuid();
+export const SwitchButton = (props: SwitchButtonProps) => {
+  const { control } = useFormContext();
+  const {
+    field,
+    fieldState: { error },
+  } = useController({
+    control,
+    name: props.name,
+    rules: props.rules,
+  });
 
-  const [onError, setOnError] = useState<boolean>(false);
-  const [errorTransition, setErrorTransition] = useState<boolean>(false);
-  const [message, setMessage] = useState<string>('');
-  const [isValidate, setIsValidate] = useState<boolean>(true);
-
-  const feedbackRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    resetForm();
-  }, [props.value]);
-
-  useEffect(() => {
-    if (errorTransition) {
-      setTimeout(() => {
-        setErrorTransition(false);
-      }, 300);
-    }
-  }, [errorTransition]);
-
-  const check = (silence: boolean = false): boolean => {
-    // validate check
-    if (props.validate) {
-      if (props.value === props.trueValue) {
-        resetForm();
-        return true;
-      } else {
-        if (!silence) {
-          const labelText = Array.isArray(props.label) ? props.label[0] : '';
-
-          setMessage(
-            typeof props.validate === 'string'
-              ? props.validate
-              : `${labelText}을(를) 선택해주세요.`
-          );
-          setOnError(true);
-          setIsValidate(false);
-          setErrorTransition(true);
-        }
-
-        return false;
-      }
-    }
-
-    return true;
-  };
-
-  const resetForm = (): void => {
-    resetValidate();
-  };
-
-  const resetValidate = (): void => {
-    setMessage('');
-    setOnError(false);
-    setIsValidate(true);
-    setErrorTransition(false);
-  };
-
-  const updateValue = (evt: ChangeEvent<HTMLInputElement>): void => {
+  const onChange = (evt: ChangeEvent<HTMLInputElement>): void => {
     const e = evt.target;
 
-    if (!props.readonly) {
-      props.onChange(e.checked ? props.trueValue! : props.falseValue!)
-    } else {
+    if (props.readOnly) {
       // 상태가 변경 되지 않도록 처리
       e.checked = !e.checked;
+    } else {
+      field.onChange(e.checked ? props.trueValue : props.falseValue);
+      props.onChange(e.checked ? props.trueValue : props.falseValue);
     }
   };
 
-  const onAnimationEnd = () => {
-    setErrorTransition(false);
-  }
+  const wrapperClassName = useMemo<string>(
+    () => ['switch-wrap ', props.color].join(''),
+    [props.color],
+  );
 
-  const wrapperClassName = useMemo<string>(() => [
-    'switch-wrap ',
-    props.color
-  ].join(''), [props.color]);
-
-  const labelClassName = useMemo<string>(() => [
-    'switch ',
-    props.small ? 'small ' : '',
-    props.checkbox ? 'checkbox ' : '',
-    onError ? 'error ' : '',
-  ].join(''), [onError]);
-
-  const errorTransitionClassName = useMemo<string>(() => [
-    'feedback ',
-    errorTransition ? 'error ' : '',
-  ].join(''), [errorTransition]);
-
-  useImperativeHandle(ref, () => ({
-    element: document.getElementById(elementId),
-    resetValidate,
-    check,
-    resetForm
-  }));
+  const labelClassName = useMemo<string>(
+    () =>
+      [
+        'switch ',
+        props.small ? 'small ' : '',
+        props.checkbox ? 'checkbox ' : '',
+      ].join(''),
+    [props.small, props.checkbox],
+  );
 
   return (
-    <div id={elementId} className={wrapperClassName}>
+    <div className={wrapperClassName}>
       <label className={labelClassName}>
         <input
           type="checkbox"
           disabled={props.disabled}
-          readOnly={props.readonly}
+          readOnly={props.readOnly}
           checked={props.value == props.trueValue}
-          onChange={updateValue}
+          onChange={onChange}
         />
 
         {props.checkbox ? (
-          <Icon path={props.value == props.trueValue ? mdiCheckboxMarked : mdiCheckboxBlankOutline} />
+          <Icon
+            path={
+              props.value == props.trueValue
+                ? mdiCheckboxMarked
+                : mdiCheckboxBlankOutline
+            }
+          />
         ) : (
-          <span><i></i></span>
+          <span>
+            <i></i>
+          </span>
         )}
 
         <div className="label-text">
-          {props.value === props.trueValue
-              ? (props.label && props.label[1])
-              : (props.label && props.label[0])
-          }
+          {props.value === props.trueValue ? props.trueLabel : props.falseLabel}
         </div>
       </label>
 
-      <div
-        ref={feedbackRef}
-        className={errorTransitionClassName}
-        onAnimationEnd={onAnimationEnd}
-        v-show="message"
-      >
-        { message }
-      </div>
+      <ValidateMessage message={error?.message as string} />
     </div>
   );
-});
+};
 
 SwitchButton.displayName = 'SwitchButton';
 SwitchButton.defaultProps = {
-  label: ['미설정', '설정'],
-  validate: [],
+  validate: false,
   trueValue: true,
   falseValue: false,
+  trueLabel: '설정',
+  falseLabel: '미설정',
   color: switchButtonColors.primary,
-}
+};

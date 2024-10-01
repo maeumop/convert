@@ -9,25 +9,20 @@ export const switchButtonColors = {
 } as const;
 
 export interface SwitchButtonProps {
+  name: string;
   onChange: (v: string | boolean) => void;
   value: string | boolean;
   small?: boolean;
-  label?: string[];     // [0 => false label, 1 => true label]
-  validate?: string | boolean;
-  trueValue?: string | boolean;
-  falseValue?: string | boolean;
+  trueLabel?: string;
+  falseLabel?: string;
+  rules?: object;
+  trueValue: string | boolean;
+  falseValue: string | boolean;
   placeholder?: string;
-  readonly?: boolean;
+  readOnly?: boolean;
   checkbox?: boolean;
   color?: SwitchButtonColors;
   disabled?: boolean;
 }
 
-export type SwitchButtonColors = typeof switchButtonColors[keyof typeof switchButtonColors];
-
-export interface SwitchButtonModel {
-  element: HTMLElement | null;
-  check(silence?: boolean): void;
-  resetForm(): void;
-  resetValidate(): void;
-}
+export type SwitchButtonColors = (typeof switchButtonColors)[keyof typeof switchButtonColors];

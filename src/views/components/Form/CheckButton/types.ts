@@ -1,5 +1,3 @@
-import { ValidationRule } from "../../types";
-
 export const checkButtonColors = {
   primary: 'primary',
   success: 'success',
@@ -12,16 +10,16 @@ export const checkButtonColors = {
 
 export const checkButtonType = {
   checkbox: 'checkbox',
-  radio: 'radio'
+  radio: 'radio',
 } as const;
 
-export type CheckButtonColors = typeof checkButtonColors[keyof typeof checkButtonColors];
+export type CheckButtonColors = (typeof checkButtonColors)[keyof typeof checkButtonColors];
 
-export type CheckButtonType = typeof checkButtonType[keyof typeof checkButtonType];
+export type CheckButtonType = (typeof checkButtonType)[keyof typeof checkButtonType];
 
 export interface CheckButtonItem {
-  text: string
-  value: string
+  text: string;
+  value: string;
 }
 
 export interface CheckButtonProps {
@@ -32,20 +30,10 @@ export interface CheckButtonProps {
   type?: CheckButtonType;
   all?: boolean;
   maxLength?: number;
-  validate?: ValidationRule[];
-  errorMessage?: string;
+  rules?: object;
   button?: boolean;
   block?: boolean;
   color?: CheckButtonColors;
   disabled?: boolean;
-  label?: string;
-  required?: boolean;
   lineLimit?: number;
-}
-
-export interface CheckButtonModel {
-  element: HTMLElement | null;
-  check(silence?: boolean): void;
-  resetForm(): void;
-  resetValidate(): void;
 }

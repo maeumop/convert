@@ -1,28 +1,34 @@
 import type { toastColorCase, toastIconCase } from './const';
+import type { Dispatch, RefObject, SetStateAction } from 'react';
 
-export type ToastColorCase = typeof toastColorCase[keyof typeof toastColorCase];
+export interface ToastOption {
+  key?: string;
+  message: string;
+  icon?: string;
+  color?: string;
+}
 
-export type ToastIconCase = typeof toastIconCase[keyof typeof toastIconCase];
+export interface ToastProps {
+  toast: ToastOption[];
+  delay: number;
+  timeout: NodeJS.Timeout[];
+}
+
+export interface ToastStateContextModel {
+  toastList: ToastOption[];
+  setToastList: Dispatch<SetStateAction<ToastOption[]>>;
+}
+
+export interface ToastHooksModel extends ToastStateContextModel {
+  toast: (option: ToastOption | string) => void;
+}
+
+export type ToastType = (typeof toastType)[keyof typeof toastType];
+
+export type ToastIcon = (typeof toastIcon)[keyof typeof toastIcon];
 
 export interface ToastOptions {
-  maxShowMessage?: number
-  delay?: number,
-  destroy: Function
-}
-
-export interface MessageOptions {
-  message: string
-  icon?: ToastIconCase
-  color?: ToastColorCase
-}
-
-export interface ToastModel {
-  (params: string | MessageOptions): void
-}
-
-export interface ToastListType {
-  key: number
-  color: ToastColorCase
-  icon: ToastIconCase
-  message: string
+  maxShowMessage?: number;
+  delay?: number;
+  destroy: Function;
 }

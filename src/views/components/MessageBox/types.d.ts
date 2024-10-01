@@ -1,26 +1,28 @@
+import { Dispatch, SetStateAction } from 'react';
 import type { messageBoxType } from './const';
 
+export type MessageBoxType =
+  (typeof messageBoxType)[keyof typeof messageBoxType];
+
 export interface MessageBoxProps {
-  message: string;
-  modalStyleClass?: string;
-  noScrollStyleClass?: string;
+  isShow?: boolean;
+  type?: MessageBoxType;
+  message?: string;
   title?: string;
-  width?: number;
-  btnOkayText?: string;
-  btnCancelText?: string;
-  okay?: Function;
-  cancel?: Function;
-  asyncOkay?: Function;
-  destroy?: Function;
-  escCancel?: boolean;
-  enterOkay?: boolean;
-  isConfirm?: boolean;
+  okayHandler?: () => void;
+  cancelHandler?: () => void;
 }
 
-export interface MessageBoxModel {
-  alert(params: MessageBoxOptions | string): void;
-  confirm(params: MessageBoxOptions | string): void;
-  destroy(): void;
+export type MessageBoxConfig = Partial<MessageBoxProps> & {
+  message: Required<MessageBoxProps['message']>;
+};
+
+export interface MessageBoxContextModel {
+  open: (config: MessageBoxConfig) => void;
+  close: () => void;
 }
 
-export type MessageBoxType = typeof messageBoxType[keyof typeof messageBoxType];
+export interface MessageBoxStateContextModel {
+  state: MessageBoxProps;
+  setModalState: Dispatch<SetStateAction<MessageBoxProps>>;
+}

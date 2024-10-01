@@ -4,14 +4,12 @@
   display: inline-block;
   position: relative;
 
-  &.with-label {
-    margin-top: 0.3em;
-  }
-
   input {
     width: 100%;
     border: 1px solid $gray-300;
     padding: 9px 16px;
+    height: 40px;
+    border-radius: 5px;
     margin: 0;
     resize: vertical;
     color: $gray-800;
@@ -30,8 +28,9 @@
     }
 
     &::placeholder {
-      color: $gray-500;
+      color: $gray-400;
       font-weight: 400;
+      font-size: 0.8em;
     }
   }
 

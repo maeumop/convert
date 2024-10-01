@@ -1,13 +1,11 @@
-import { useState, useRef, useMemo, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import type {
   CSSProperties,
   MouseEvent as ReactMouseEvent,
   KeyboardEvent as ReactKeyboardEvent,
-  AnimationEvent,
 } from 'react';
-import type { SelectBoxItem, SelectBoxModel, SelectBoxProps } from './types';
+import type { SelectBoxItem, SelectBoxProps } from './types';
 import {
-  mdiWindowClose,
   mdiChevronDown,
   mdiMagnify,
   mdiCheckboxMarked,
@@ -15,26 +13,39 @@ import {
   mdiCloseCircle,
   mdiGoogleCirclesExtended,
 } from '@mdi/js';
-import uuid from 'react-uuid';
-import { TimeoutId } from 'node_modules/@reduxjs/toolkit/dist/query/core/buildMiddleware/types';
 import Icon from '@mdi/react';
+import { ValidateMessage } from '../ValidateForm';
+import { useController, useFormContext } from 'react-hook-form';
 import { CSSTransition } from 'react-transition-group';
 import './style.scss';
 
-export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref) => {
-  const elementId = uuid();
+type SelectedEvent =
+  | ReactMouseEvent
+  | MouseEvent
+  | ReactKeyboardEvent
+  | KeyboardEvent;
 
-  const [isValidate, setIsValidate] = useState<boolean>(true);
-  const [message, setMessage] = useState<string>('');
-  const [errorTransition, setErrorTransition] = useState<boolean>(false);
+export const SelectBox = (props: SelectBoxProps) => {
+  const { control } = useFormContext();
+  const {
+    field,
+    formState: { errors },
+  } = useController({
+    defaultValue: [],
+    name: props.name,
+    control,
+    rules: props.rules,
+  });
+
   const [isShowOption, setIsShowOption] = useState<boolean>(false);
   const [showBottom, setShowBottom] = useState<boolean>(false);
   const [isSearchFilter, setIsSearchFilter] = useState<boolean>(false);
-  const [selectedText, setSelectedText] = useState<string | string[]>(props.multiple ? [] : '');
-  const [selectedValue, setSelectedValue] = useState<string | string[]>(props.multiple ? [] : '');
-  const [optionList, setOptionList] = useState<SelectBoxItem[]>([...props.options]);
-  const [searchInputValue, setSearchInputValue] = useState<string>('');
-  // const [transitionStatus, setTransitionStatus] = useState<boolean>(false);
+  const [selectedText, setSelectedText] = useState<string[]>([]);
+  const [selectedValue, setSelectedValue] = useState<string[]>([]);
+  const [optionList, setOptionList] = useState<SelectBoxItem[]>([
+    ...props.options,
+  ]);
+  const [searchValue, setSearchValue] = useState<string>('');
 
   const transitionRef = useRef<HTMLDivElement>(null);
   const selectBoxRef = useRef<HTMLDivElement>(null);
@@ -50,40 +61,18 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
   const [selectedKeyIndex, setSelectedKeyIndex] = useState<number>(0);
 
   useEffect(() => {
-    if (props.errorMessage) {
-      setIsValidate(false);
-      setMessage(props.errorMessage);
-    }
-  }, [props.errorMessage]);
-
-  useEffect(() => {
-    resetValidate();
-  }, [props.validate]);
-
-  useEffect(() => {
-    setDefaultModelValue();
-  }, [props.value]);
-
-  useEffect(() => {
     setOptionList([...props.options]);
-    setDefaultModelValue();
   }, [props.options]);
-
-  useEffect(() => {
-    if (props.disabled) {
-      resetValidate();
-    }
-  }, [props.disabled]);
 
   const isSelectAll = useMemo<boolean>(() => {
     if (props.multiple) {
-      return optionList.length > 0 ?
-        optionList.every(item => (selectedValue as string[]).includes(item.value))
+      return optionList.length > 0
+        ? optionList.every((item) => selectedValue.includes(item.value))
         : false;
     }
 
     return false;
-  }, [props.multiple]);
+  }, [selectedValue]);
 
   const styleWidth = useMemo<string>(() => {
     if (typeof props.width === 'string') {
@@ -96,158 +85,49 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
   }, [props.width]);
 
   const wrapperClassName = useMemo<string>(() => {
-    return [
-      'select-box ',
-      props.label ? 'with-label ' : '',
-      !isValidate ? 'error ' : '',
-      props.block ? 'block ' : '',
-    ].join('');
-  }, [props.label, isValidate, props.block]);
+    return ['select-box ', props.block ? 'block ' : ''].join('');
+  }, [props.block]);
 
-  const labelClassName = useMemo<string>(() => [
-    'input-label ',
-    !isValidate ? 'error ' : ''
-  ].join(''), [isValidate]);
+  const arrowIconClassName = useMemo<string>(
+    () => ['arrow ', isShowOption ? 'rotate ' : ''].join(''),
+    [isShowOption],
+  );
 
-  const arrowIconClassName = useMemo<string>(() => [
-    'arrow ',
-    isShowOption ? 'rotate ' : ''
-  ].join(''), [isShowOption]);
+  const layerClassName = useMemo<string>(
+    () => ['option-list ', showBottom ? 'show-bottom ' : 'show-top '].join(''),
+    [showBottom],
+  );
 
-  const layerClassName = useMemo<string>(() => [
-    'option-list ',
-    showBottom ? 'show-bottom ' : 'show-top '
-  ].join(''), [showBottom]);
+  const optionCheckAllClassName = useMemo<string>(
+    () =>
+      [
+        'option-item ',
+        selectedKeyIndex === 0 && !isSearchFilter ? 'key-selected ' : '',
+      ].join(''),
+    [selectedKeyIndex, isSearchFilter],
+  );
 
-  const optionCheckAllClassName = useMemo<string>(() => [
-    'option-item ',
-    selectedKeyIndex === 0 && !isSearchFilter ? 'key-selected ' : ''
-  ].join(''), [selectedKeyIndex, isSearchFilter]);
+  const optionCheckAllIconClassName = useMemo<string>(
+    () => ['checkbox ', isSelectAll ? 'checked ' : ''].join(''),
+    [isSelectAll],
+  );
 
-  const optionCheckAllIconClassName = useMemo<string>(() => [
-    'checkbox ',
-    isSelectAll ? 'checked ' : '',
-  ].join(''), [isSelectAll]);
+  const selectBoxClassName = useMemo<string>(
+    () =>
+      [
+        'control-wrap ',
+        props.disabled ? 'disabled ' : '',
+        props.readOnly ? 'readonly ' : '',
+        isShowOption ? 'active ' : '',
+      ].join(''),
+    [isShowOption],
+  );
 
-  const selectBoxClassName = useMemo<string>(() => [
-    'control-wrap ',
-    props.disabled ? 'disabled ' : '',
-    props.readonly ? 'readonly ' : '',
-    message !== '' ? 'error ' : '',
-    isShowOption ? 'active ': '',
-  ].join(''), [message, isShowOption]);
+  const onChange = (v: string[], t: string[]): void => {
+    setSelectedValue(v);
+    setSelectedText(t);
 
-  const feedbackClassName = useMemo<string>(() => [
-    'feedback ',
-    errorTransition ? 'error ' : ''
-  ].join(''), [errorTransition]);
-
-  const getShowText = useMemo<string[]>(() => {
-    if (props.btnAccept === true) {
-      return Array.isArray(selectedText) ? selectedText : [selectedText];
-    }
-
-    let values: string[] = Array.isArray(props.value) ? props.value : [props.value];
-
-    return props.options.filter(option => values.includes(option.value)).map(({ text }) => text);
-  }, [selectedText, props.value]);
-
-  /**
-   * 초기 modelValue 바로 대입할시 selectedValue의 값이 modelValue 메모리를 참조
-   * 다중선택(btnAccept) 적용 버튼을 만족 시키기 위해 구조분해 할당 적용
-   */
-  const setDefaultModelValue = () => {
-    if (Array.isArray(props.value)) {
-      setSelectedValue([...props.value]);
-    }
-
-    if (props.multiple) {
-      setSelectedText([]);
-    } else {
-      setSelectedText('');
-      setSelectedValue('');
-    }
-
-    props.options.forEach(item => {
-      if (props.multiple && Array.isArray(props.value)) {
-        if (props.value.includes(item.value as never)) {
-          setSelectedText([
-            ...selectedText,
-            item.text
-          ]);
-
-          return;
-        }
-      } else {
-        if (props.value === item.value) {
-          setSelectedText(item.text);
-          setSelectedValue(item.value);
-          return;
-        }
-      }
-    });
-  };
-
-  const updateValue = (v: string | string[], index: number = -1): void => {
-    props.onChange(v);
-    // emit('update:selectedIndex', index);
-    check();
-  };
-
-  /**
-   * 유효성 검사
-   */
-  const check = (silence: boolean = false): boolean => {
-    if (!props.disabled) {
-      // 폼을 검수하여 값을 반환, 임의로 지정된 에러가 없는 경우
-      // validate check
-      if (!props.errorMessage && props.validate?.length) {
-        for (let i: number = 0; i < props.validate.length; i++) {
-          let result: string | boolean = props.validate[i](selectedValue);
-
-          if (typeof result === 'string') {
-            if (!silence) {
-              setMessage(result);
-              setIsValidate(false);
-              setErrorTransition(true);
-            }
-
-            return false;
-          }
-        }
-      }
-
-      setMessage('');
-      setIsValidate(true);
-    }
-
-    return true;
-  };
-
-  /**
-   * 폼 value 초기화
-   */
-  const resetForm = (): void => {
-    if (props.multiple) {
-      setSelectedText([]);
-      setSelectedValue([]);
-
-      props.onChange([]);
-    } else {
-      setSelectedText('');
-      setSelectedValue('');
-
-      props.onChange('');
-    }
-  };
-
-  /**
-   * 유효성 검사 초기화
-   */
-  const resetValidate = (): void => {
-    setMessage('');
-    setIsValidate(true);
-    setErrorTransition(false);
+    field.onChange(v);
   };
 
   /**
@@ -255,36 +135,32 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
    *
    * @param index
    */
-  const selectOption = (event: ReactMouseEvent | MouseEvent | ReactKeyboardEvent | KeyboardEvent, v: any): void => {
+  const selectOption = (event: SelectedEvent, v: string) => {
     event.stopPropagation();
 
-    let index = -1;
+    const [{ text }] = optionList.filter((item) => item.value === v);
 
-    const [{ text }] = optionList.filter((item, i) => {
-      if (item.value === v) {
-        index = i;
-        return true;
-      }
-    });
+    let copyValue: string[] = props.multiple ? [...selectedValue] : [v];
+    let copyText: string[] = props.multiple ? [...selectedText] : [text];
 
     if (props.multiple) {
-      const indexOf: number = selectedValue.indexOf(v);
+      const indexOf: number = copyValue.indexOf(v);
 
       if (indexOf > -1) {
         // 이미 선택된 값이라면 값 제거
-        setSelectedValue((selectedValue as string[]).splice(indexOf, 1));
-        setSelectedText((selectedText as string[]).splice(indexOf, 1));
+        copyValue.splice(indexOf, 1);
+        copyText.splice(indexOf, 1);
       } else {
-        setSelectedValue([...selectedValue, v]);
-        setSelectedText([...selectedText, text]);
+        copyValue.push(v);
+        copyText.push(text);
       }
-    } else {
-      setSelectedValue(v);
-      setSelectedText(text);
     }
 
     if (!props.btnAccept) {
-      updateValue(selectedValue, index);
+      onChange(copyValue, copyText);
+    } else {
+      setSelectedValue(copyValue);
+      setSelectedText(copyText);
     }
 
     if (!props.multiple) {
@@ -297,26 +173,7 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
    *
    * @param index
    */
-  const isOptionSelected = (v: any): boolean => {
-    if (props.multiple) {
-      return selectedValue.includes(v);
-    }
-
-    return props.value === v;
-  };
-
-  const removeSelected = (event: ReactMouseEvent, index: number): void => {
-    event.stopPropagation();
-
-    if (props.multiple) {
-      setSelectedText((selectedText as string[]).splice(index, 1));
-      setSelectedValue((selectedValue as string[]).splice(index, 1));
-    }
-
-    if (!props.btnAccept) {
-      updateValue(selectedValue);
-    }
-  };
+  const isOptionSelected = (v: any): boolean => selectedValue.includes(v);
 
   /**
    * 검색 유무에 따른 옵션 focus인지 판별
@@ -326,7 +183,7 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
     let index: number = i;
 
     if (props.multiple) {
-      index = (!isSearchFilter ? i + 1 : i);
+      index = !isSearchFilter ? i + 1 : i;
     }
 
     return selectedKeyIndex === index;
@@ -339,20 +196,18 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
     event?.stopPropagation();
 
     if (props.multiple) {
-      const value: boolean = isSelectAll;
+      const newValue: string[] = [];
+      const newText: string[] = [];
 
-      setSelectedText([]);
-      setSelectedValue([]);
-
-      if (!value) {
+      if (!isSelectAll) {
         optionList.forEach(({ text, value }) => {
-          setSelectedText([...selectedText, text]);
-          setSelectedValue([...selectedValue, value]);
+          newValue.push(value);
+          newText.push(text);
         });
       }
 
       if (!props.btnAccept) {
-        updateValue([...selectedValue]);
+        onChange(newValue, newText);
       }
     }
   };
@@ -361,17 +216,17 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
    * 옵션 목록 표시
    */
   const toggleOption = (): void => {
-    if (!props.disabled && !props.readonly) {
+    if (!props.disabled && !props.readOnly) {
       if (!isShowOption) {
         const windowHeight: number = window.innerHeight;
         const rect = selectBoxRef.current?.getBoundingClientRect() as DOMRect;
 
-        setShowBottom((windowHeight / 2 < rect.top) ? true : false);
+        setShowBottom(windowHeight / 2 < rect.top ? true : false);
 
         setLayerPos({
           left: `${rect.left}px`,
           width: `${rect.width}px`,
-          bottom: showBottom ? `${(windowHeight - rect.top) + 3}px` : '',
+          bottom: showBottom ? `${windowHeight - rect.top + 3}px` : '',
           top: !showBottom ? `${rect.top + 43}px` : '',
         });
       }
@@ -380,7 +235,7 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
 
       if (isShowOption) {
         if (props.searchable) {
-          setSearchInputValue('');
+          setSearchValue('');
           setIsSearchFilter(false);
         }
 
@@ -392,11 +247,19 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
     }
   };
 
-  let timeout: TimeoutId;
+  let timeout: NodeJS.Timeout;
 
-  // props.searchable 적용시
-  const searchText = (evt: ReactKeyboardEvent | KeyboardEvent): void => {
+  /**
+   * props.searchable 적용시
+   * 입력된 키워드로 옵션을 filter링 하여 필요한 옵션만 보이도록 처리
+   * @param evt
+   */
+  const searchKeyword = (evt: ReactKeyboardEvent | KeyboardEvent): void => {
     const key = evt.key.toLowerCase();
+
+    if (key === 'enter') {
+      evt.preventDefault();
+    }
 
     clearTimeout(timeout);
 
@@ -409,7 +272,12 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
         setIsSearchFilter(value ? true : false);
 
         if (value) {
-          setOptionList(props.options.filter(({ text }) => text.toLowerCase().indexOf(value.toLowerCase()) > -1));
+          setOptionList(
+            props.options.filter(
+              ({ text }) =>
+                text.toLowerCase().indexOf(value.toLowerCase()) > -1,
+            ),
+          );
         } else {
           setOptionList([...props.options]);
         }
@@ -426,7 +294,7 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
     event.stopPropagation();
 
     setIsShowOption(false);
-    updateValue(selectedValue);
+    onChange(selectedValue, selectedText);
   };
 
   /**
@@ -435,28 +303,26 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
    */
   const noneAccept = (): void => {
     if (props.btnAccept) {
-      setSelectedText([]);
-      setSelectedValue([]);
+      const copyValue: string[] = [...props.value];
+      const copyText: string[] = [];
+      const len = props.options.length;
 
-      setSelectedValue([...props.value]);
-      for (let index = 0; index < props.options.length; index++) {
-        const option = props.options[index];
-        if (selectedValue.includes(option.value)) {
-          setSelectedText([
-            ...selectedText,
-            option.text
-          ]);
+      for (let i = 0; i < len; i++) {
+        const option = props.options[i];
+
+        if (copyValue.includes(option.value)) {
+          copyText.push(option.text);
         }
-        if (selectedText.length === selectedValue.length) {
+
+        if (copyText.length === copyValue.length) {
           break;
         }
       }
 
-      updateValue([...selectedValue]);
+      onChange(copyValue, copyText);
     }
   };
 
-  const feedbackRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLDivElement>(null);
 
   let eventParentElement: HTMLElement;
@@ -490,29 +356,40 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
   };
 
   const clearButtonShow = useMemo<boolean>(() => {
-    if (props.value) {
+    if (props.value.length) {
       return (
-        props.clearable !== undefined
-        && !props.disabled
-        && !props.readonly
-        && props.value.length > 0
+        props.clearable &&
+        !props.disabled &&
+        !props.readOnly &&
+        props.value.length > 0
       );
     }
 
-    return false;
-  }, [props.value, props.clearable, props.disabled, props.readonly]);
+    return selectedValue.length > 0;
+  }, [
+    props.value,
+    props.clearable,
+    props.disabled,
+    props.readOnly,
+    selectedValue,
+  ]);
 
   const clearValue = (event: ReactMouseEvent<HTMLAnchorElement>): void => {
     event.preventDefault();
     event.stopPropagation();
 
-    updateValue(props.multiple ? [] : '');
+    onChange([], []);
   };
 
   const onBlur = (): void => {
-    props.onChange(selectedValue);
+    onChange(selectedValue, selectedText);
   };
 
+  /**
+   * 키보드 화살표를 이용해 options 선택을 변경 하는 이벤트
+   * @param event
+   * @returns
+   */
   const onKeyHandler = (event: ReactKeyboardEvent | KeyboardEvent): void => {
     event.stopPropagation();
 
@@ -537,7 +414,6 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
           }
 
           len && li[selectedKeyIndex].scrollIntoView({ block: 'center' });
-
         } else if (code === 'arrowup' && selectedKeyIndex >= -1) {
           if (selectedKeyIndex - 1 === -1) {
             setSelectedKeyIndex(len - 1);
@@ -546,12 +422,14 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
           }
 
           len && li[selectedKeyIndex].scrollIntoView({ block: 'center' });
-
         } else if (['numpadenter', 'enter'].includes(code)) {
           if (props.multiple && !isSearchFilter && selectedKeyIndex === 0) {
             selectAll();
           } else {
-            const index = props.multiple && !isSearchFilter ? selectedKeyIndex - 1 : selectedKeyIndex;
+            const index =
+              props.multiple && !isSearchFilter
+                ? selectedKeyIndex - 1
+                : selectedKeyIndex;
             if (index > -1 && index < optionList.length) {
               const value = optionList[index].value;
               selectOption(event, value);
@@ -559,8 +437,11 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
           }
         } else if (code === 'tab') {
           if (document.activeElement instanceof HTMLElement) {
-            const parentElement = selectBoxRef.current?.parentElement || undefined;
-            const isFocused: boolean = parentElement ? document.activeElement.contains(parentElement) : false;
+            const parentElement =
+              selectBoxRef.current?.parentElement || undefined;
+            const isFocused: boolean = parentElement
+              ? document.activeElement.contains(parentElement)
+              : false;
             // 해당 SelectBox 포커스영역에서 포커스 이동시, 옵션 영역 활성화 해제 진행.
             !isFocused && toggleOption();
           }
@@ -579,12 +460,8 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
         (eventPhase === 1 || eventPhase === 2) && event.stopPropagation();
       }
 
-      searchText(event);
+      searchKeyword(event);
     }
-  };
-
-  const onAnimationEnd = (event: AnimationEvent) => {
-    setErrorTransition(false);
   };
 
   /**
@@ -594,8 +471,6 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
    */
   const onOutsideClickEvent = (evt: MouseEvent) => {
     const target = evt.target as HTMLBodyElement;
-
-    console.log(isShowOption);
 
     if (isShowOption) {
       if (selectBoxRef.current && !selectBoxRef.current.contains(target)) {
@@ -612,12 +487,10 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
 
     return () => {
       document.removeEventListener('click', onOutsideClickEvent);
-    }
-  }, [isShowOption])
+    };
+  }, [isShowOption]);
 
   useEffect(() => {
-    setDefaultModelValue();
-
     if (mainRef.current) {
       setScrollEvent(mainRef.current);
     }
@@ -628,147 +501,42 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
       if (eventParentElement) {
         eventParentElement.removeEventListener('scroll', parentScrollEvent);
       }
-    }
+    };
   }, []);
-
-  useImperativeHandle(ref, () => {
-    return {
-      element: document.getElementById(elementId),
-      check,
-      resetForm,
-      resetValidate,
-    }
-  });
 
   return (
     <>
       <div
         ref={mainRef}
         tabIndex={0}
-        id={elementId}
         style={{ width: styleWidth }}
         className={wrapperClassName}
         onKeyDown={onKeyHandler}
       >
-        {!props.inLabel && (
-          <div className="options-wrap">
-            <>
-            {props.label && (
-              <label className={labelClassName}>
-                { props.label }
-                {props.required && (<span className="required">*</span>)}
-              </label>
-            )}
-            </>
-          </div>
-        )}
-
         <div
           ref={selectBoxRef}
           className={selectBoxClassName}
           onClick={toggleOption}
         >
-          {props.multiple ? (
-            <>
-              {getShowText.length ? (
-                <div className="text">
-                  {props.labelText ? (
-                    <>
-                      {!props.isShort ? (
-                        <>
-                          {getShowText.map((txt, i) => (
-                            <span
-                              className="item"
-                              key={`selectedItem${i}`}
-                              onClick={(event) => removeSelected(event, i)}
-                            >
-                              {txt}
-                              <Icon
-                                className="remove-icon"
-                                size="13"
-                                path={mdiWindowClose}
-                              />
-                            </span>
-                          ))}
-                        </>
-                      ) : (
-                        <>
-                          <span>{getShowText[0]}</span>
-                          {getShowText.length > 1 && (<>&nbsp;+ {getShowText.length - 1}</>)}
-                        </>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      {!props.isShort ? (
-                        <>
-                          {props.inLabel && (
-                            <span className="label">
-                              {props.label}:
-                            </span>
-                          )}
-
-                          {getShowText.join(', ')}
-                        </>
-                      ) : (
-                        <>
-                          {props.inLabel && (
-                            <span className="label">
-                              {props.label}:
-                            </span>
-                          )}
-
-                          {getShowText.join('')}
-                          {getShowText.length > 1 && (<>&nbsp;+ {getShowText.length - 1}</>)}
-                        </>
-                      )}
-                    </>
+          {selectedText.length ? (
+            <div className="text">
+              {props.isShort ? (
+                <>
+                  {selectedText.join('')}
+                  {selectedText.length > 1 && (
+                    <>&nbsp;+ {selectedText.length - 1}</>
                   )}
-                </div>
+                </>
               ) : (
-                <div className="text ph">
-                  {props.inLabel && (
-                    <span className="label">
-                      {props.label}:
-                    </span>
-                  )}
-
-                  {props.placeholder}
-                </div>
+                selectedText.join(', ')
               )}
-            </>
+            </div>
           ) : (
-            <>
-              {getShowText.length > 0 ? (
-                <div className="text">
-                  {props.inLabel && (
-                    <span className="label">
-                      { props.label }:
-                    </span>
-                  )}
-
-                  { getShowText[0] }
-                </div>
-              ) : (
-                <div className="text ph">
-                  {props.inLabel && (
-                    <span className="label">
-                      { props.label }:
-                    </span>
-                  )}
-
-                  { props.placeholder }
-                </div>
-              )}
-            </>
+            <div className="text ph">{props.placeholder}</div>
           )}
 
           {clearButtonShow && (
-            <a
-              href="#"
-              className="btn-clear"
-              onClick={clearValue}
-            >
+            <a href="#" className="btn-clear" onClick={clearValue}>
               <Icon color="#888" size="20" path={mdiCloseCircle} />
             </a>
           )}
@@ -777,9 +545,6 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
             <Icon size="16" path={mdiChevronDown} />
           </div>
 
-            {/* @leave="[onBlur(), props.blurValidate && check()]"
-            @enter="transitionStatus = true"
-            @after-enter="transitionStatus = false" */}
           <CSSTransition
             unmountOnExit
             timeout={200}
@@ -788,7 +553,7 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
             classNames={showBottom ? 'option-items-bottom' : 'option-items'}
             onExit={() => {
               onBlur();
-              props.blurValidate && check();
+              props.blurValidate;
             }}
           >
             <div
@@ -805,51 +570,58 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
                     <input
                       type="text"
                       placeholder="검색어 입력"
-                      value={searchInputValue}
-                      onChange={(event) => setSearchInputValue(event.target.value)}
-                      onKeyDown={onKeyHandler}
+                      value={searchValue}
+                      onChange={(e) => setSearchValue(e.target.value)}
+                      onKeyDown={searchKeyword}
                     />
                     <Icon color="#888" path={mdiMagnify} />
                   </div>
                 </div>
               )}
               <ul ref={ulRef} className="scrollbar">
-                {(props.multiple && !props.maxLength && !isSearchFilter) && (
-                  <li
-                    className={optionCheckAllClassName}
-                    onClick={selectAll}
-                  >
+                {props.multiple && !props.maxLength && !isSearchFilter && (
+                  <li className={optionCheckAllClassName} onClick={selectAll}>
                     <Icon
                       className={optionCheckAllIconClassName}
-                      path={isSelectAll ? mdiCheckboxMarked : mdiCheckboxBlankOutline}
+                      path={
+                        isSelectAll
+                          ? mdiCheckboxMarked
+                          : mdiCheckboxBlankOutline
+                      }
                     />
-                    { isSelectAll ? '전체 해제' : '전체 선택' }
+                    {isSelectAll ? '전체 해제' : '전체 선택'}
                   </li>
                 )}
                 {optionList.length ? (
                   <>
-                  {optionList.map((item, i) => (
-                    <li
-                      key={`select-${item.value}`}
-                      className={[
-                        'option-item ',
-                        isOptionSelected(item.value) ? 'selected ' : '',
-                        isOptionFocused(i) ? 'key-selected ' : ''
-                      ].join('')}
-                      onClick={(event) => selectOption(event, item.value)}
-                    >
-                      {props.multiple && (
-                        <Icon
-                          className="checkbox"
-                          path={isOptionSelected(item.value) ? mdiCheckboxMarked : mdiCheckboxBlankOutline}
-                        />
-                      )}
-                      { item.text }
-                    </li>
-                  ))}
+                    {optionList.map((item, i) => (
+                      <li
+                        key={`select-${item.value}`}
+                        className={[
+                          'option-item ',
+                          isOptionSelected(item.value) ? 'selected ' : '',
+                          isOptionFocused(i) ? 'key-selected ' : '',
+                        ].join('')}
+                        onClick={(event) => selectOption(event, item.value)}
+                      >
+                        {props.multiple && (
+                          <Icon
+                            className="checkbox"
+                            path={
+                              isOptionSelected(item.value)
+                                ? mdiCheckboxMarked
+                                : mdiCheckboxBlankOutline
+                            }
+                          />
+                        )}
+                        {item.text}
+                      </li>
+                    ))}
                   </>
                 ) : (
-                  <li onClick={(event) => event.stopPropagation()}>검색된 내용이 없습니다.</li>
+                  <li onClick={(event) => event.stopPropagation()}>
+                    검색된 내용이 없습니다.
+                  </li>
                 )}
                 {props.isLoading && (
                   <li className="items-loading">
@@ -862,50 +634,35 @@ export const SelectBox = forwardRef<SelectBoxModel, SelectBoxProps>((props, ref)
                 )}
               </ul>
               {props.btnAccept && (
-                <a
-                  href="#"
-                  className="btn-accept"
-                  onClick={accept}
-                >
-                  적용 + { selectedValue.length }
+                <a href="#" className="btn-accept" onClick={accept}>
+                  적용 + {selectedValue.length}
                 </a>
               )}
             </div>
           </CSSTransition>
         </div>
-
-        {(message && !props.hideMessage) && (
-          <div
-            ref={feedbackRef}
-            className={feedbackClassName}
-            onAnimationEnd={onAnimationEnd}
-          >
-            { message }
-          </div>
-        )}
       </div>
+
+      <ValidateMessage message={errors[props.name]?.message as string} />
     </>
   );
-});
+};
 
 SelectBox.displayName = 'SelectBox';
 SelectBox.defaultProps = {
   options: [],
-  inLabel: false,
   block: true,
-  validate: [],
   errorMessage: '',
   multiple: false,
-  readonly: false,
+  readOnly: false,
   disabled: false,
-  required: false,
   isShort: false,
   btnAccept: false,
-  labelText: false,
   maxLength: 0,
   searchable: false,
-  hideMessage: false,
   blurValidate: true,
   clearable: false,
   isLoading: false,
+  inLabel: false,
+  labelText: false,
 };

@@ -1,28 +1,40 @@
 import { useState } from 'react';
-import type { ReactNode } from 'react';
-import { useForm, FormProvider } from 'react-hook-form';
-import type { FieldValues } from 'react-hook-form';
+import type { ValidateFormProps } from './types';
+import { FormProvider, useForm } from 'react-hook-form';
 import './style.scss';
 
-export const ValidateForm = <T extends FieldValues>(props: { children: ReactNode }) => {
-  const methods = useForm<T>();
+export const ValidateMessage = ({ message }: { message: string }) => {
+  return message ? <p className="validate-msg">{message}</p> : null;
+};
+
+export const ValidateForm = (props: ValidateFormProps) => {
+  const methods = useForm();
+
   const [isCover, setIsCover] = useState<boolean>(false);
 
-  const onSubmit = () => {
+  const onSubmit = (data: any) => {
+    if (props.cover) {
+      setIsCover(true);
+    }
 
-  }
+    props.onSubmit(data);
+  };
 
   return (
     <FormProvider {...methods}>
       <form
+        name={props.name}
         className={isCover ? 'validate-form' : ''}
         onSubmit={methods.handleSubmit(onSubmit)}
       >
         {props.children}
-        {isCover && (
-          <div className="form-cover" />
-        )}
+        {isCover && <div className="form-cover" />}
       </form>
     </FormProvider>
   );
+};
+
+ValidateForm.displayName = 'ValidateForm';
+ValidateForm.defaultProps = {
+  cover: false,
 };

@@ -1,34 +1,28 @@
-import { ValidationRule } from "../../types"
-
 export interface SelectBoxProps {
-  onChange: (v: string | string[]) => void;
-  value: string | string[];
+  name: string;
+  onChange: (v: string[]) => void;
+  value: string[];
   options: SelectBoxItem[];
-  label?: string;
-  inLabel?: boolean;
   placeholder?: string;
   block?: boolean;
-  validate?: ValidationRule[];
-  errorMessage?: string;
+  rules?: object;
   width?: string | number;
-  multiple?: boolean;
-  readonly?: boolean;
-  disabled?: boolean;
-  required?: boolean;
+  multiple: boolean;
+  readOnly: boolean;
+  disabled: boolean;
   isShort?: boolean;
   btnAccept?: boolean;
-  labelText?: boolean;
   maxLength?: number;
-  searchable?: boolean;
-  hideMessage?: boolean;
+  searchable: boolean;
   blurValidate?: boolean;
-  clearable?: boolean;
+  clearable: boolean;
   isLoading?: boolean;
+  label?: string;
 }
 
 export interface SelectBoxItem {
-  text: string
-  value: string
+  text: string;
+  value: string;
 }
 
 export interface SelectBoxModel {
