@@ -1,4 +1,4 @@
-import React, { useContext, useMemo } from 'react';
+import React, { useCallback, useContext, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import type { MouseEvent, ChangeEvent } from 'react';
 import Icon from '@mdi/react';
@@ -70,10 +70,10 @@ const MonthSelector = React.memo((props: DatePickerDateSelector) => {
   );
 });
 
-export const DateController = ({ type }: { type: PickerDateType }) => {
+export const DateController = React.memo(({ type }: { type: PickerDateType }) => {
   const { state, dispatch } = useContext(DatePickerContext);
 
-  const onChangeMonth = (event: MouseEvent, month: number) => {
+  const onChangeMonth = useCallback((event: MouseEvent, month: number) => {
     event.preventDefault();
 
     let changeYear = state[`${type}Year`];
@@ -101,21 +101,21 @@ export const DateController = ({ type }: { type: PickerDateType }) => {
       [`${type}Year`]: changeYear,
       [`${type}Month`]: changeMonth,
     });
-  };
+  }, [state, type, dispatch]);
 
-  const onYearChange = (v: number) => {
+  const onYearChange = useCallback((v: number) => {
     dispatch({
       ...state,
       [`${type}Year`]: v,
     });
-  };
+  }, [state, type, dispatch]);
 
-  const onMonthChange = (v: number) => {
+  const onMonthChange = useCallback((v: number) => {
     dispatch({
       ...state,
       [`${type}Month`]: v,
     });
-  };
+  }, [state, type, dispatch]);
 
   return (
     <div className="date-controller">
@@ -133,7 +133,7 @@ export const DateController = ({ type }: { type: PickerDateType }) => {
       </a>
     </div>
   );
-};
+});
 
 const btn = () => {
   const { state, dispatch } = useContext(DatePickerContext);

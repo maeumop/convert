@@ -111,9 +111,9 @@ const makeCalendarCell = (
   return calednar;
 };
 
-export const Calendar = (props: DatePickerCalendarProps) => {
+export const Calendar = React.memo(({ isRange = false, ...props }: DatePickerCalendarProps) => {
   const { state } = useContext(DatePickerContext);
-  const cells = makeCalendarCell(props.type, props.isRange);
+  const cells = makeCalendarCell(props.type, isRange);
 
   // 마지막 줄이 비어 있는 경우 제거
   if (cells[41 - 6].day === 0) {
@@ -145,7 +145,7 @@ export const Calendar = (props: DatePickerCalendarProps) => {
               getWeekColor(i),
               item.today && 'today',
               item.selected && 'selected',
-              !item.selected && item.inSelected && 'in-selected',
+              (!item.selected && item.inSelected) && 'in-selected',
             ].join(' ')}
             onClick={() => onClickDate(item.day)}
           >
@@ -155,9 +155,6 @@ export const Calendar = (props: DatePickerCalendarProps) => {
       })}
     </ul>
   );
-};
+});
 
 Calendar.displayName = 'Calendar';
-Calendar.defaultProps = {
-  isRange: false,
-};

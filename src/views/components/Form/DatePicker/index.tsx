@@ -1,4 +1,4 @@
-import { useContext, useRef, useState } from 'react';
+import { useCallback, useContext, useRef, useState } from 'react';
 import type { MouseEvent } from 'react';
 import type {
   DatePickerContextState,
@@ -15,6 +15,7 @@ import { DatePickerContext, DatePickerProvider } from './provider';
 import { CSSTransition } from 'react-transition-group';
 import { useOutSideClick } from './hooks';
 import './style.scss';
+import React from 'react';
 
 const BaseDatePicker = (props: DatePickerProps) => {
   const { control, clearErrors } = useFormContext();
@@ -35,35 +36,35 @@ const BaseDatePicker = (props: DatePickerProps) => {
   const [isShow, setIsShow] = useState<boolean>(false);
   const pickerRef = useRef<HTMLDivElement>(null);
 
-  const onChange = (v: string[]) => {
+  const onChange = useCallback((v: string[]) => {
     clearErrors(props.name);
     props.onChange(v);
     field.onChange(v);
-  };
+  }, [clearErrors, props.name, field.onChange, props.onChange]);
 
-  const onDateChange = (v: string) => {
+  const onDateChange = useCallback((v: string) => {
     onChange([v]);
     dispatch({
       ...state,
       startDate: v,
     });
     setIsShow(false);
-  };
+  }, [onChange, dispatch, state]);
 
   /**
    * props.isRange 설정이 되었을 경우 날짜 선택 처리
    * @param v
    * @param type
    */
-  const onRangeDateChange = (v: string, type: PickerDateType) => {
+  const onRangeDateChange = useCallback((v: string, type: PickerDateType) => {
     dispatch({
       ...state,
       [`${type}Date`]: v,
       message: '',
     });
-  };
+  }, [dispatch, state]);
 
-  const acceptDate = (evt: MouseEvent<HTMLAnchorElement>) => {
+  const acceptDate = useCallback((evt: MouseEvent<HTMLAnchorElement>) => {
     evt.preventDefault();
 
     // 선택된 날짜가 정상인지 검수
@@ -83,9 +84,9 @@ const BaseDatePicker = (props: DatePickerProps) => {
 
     onChange([state.startDate, state.endDate]);
     setIsShow(false);
-  };
+  }, [onChange, dispatch, state]);
 
-  const cancelRange = (evt: MouseEvent<HTMLAnchorElement>) => {
+  const cancelRange = useCallback((evt: MouseEvent<HTMLAnchorElement>) => {
     evt.preventDefault();
 
     dispatch({
@@ -96,7 +97,7 @@ const BaseDatePicker = (props: DatePickerProps) => {
     });
 
     setIsShow(false);
-  };
+  }, [dispatch, state]);
 
   const baseRef = useOutSideClick(() => {
     setIsShow(false);
@@ -192,21 +193,30 @@ const BaseDatePicker = (props: DatePickerProps) => {
   );
 };
 
-export const DatePicker = (props: DatePickerProps) => {
+export const DatePicker = React.memo(({
+  isRange = false,
+  placeholder = ['날짜 선택', '날짜 선택'],
+  value = ['', ''],
+  minYear = 1900,
+  readOnly = false,
+  disabled = false,
+  maxRange = 0,
+  ...props
+}: DatePickerProps) => {
   return (
     <DatePickerProvider>
-      <BaseDatePicker {...props} />
+      <BaseDatePicker
+        isRange={isRange}
+        placeholder={placeholder}
+        value={value}
+        minYear={minYear}
+        readOnly={readOnly}
+        disabled={disabled}
+        maxRange={maxRange}
+        {...props}
+      />
     </DatePickerProvider>
   );
-};
+});
 
 DatePicker.displayName = 'DatePicker';
-DatePicker.defaultProps = {
-  isRange: false,
-  placeholder: ['날짜 선택', '날짜 선택'],
-  value: ['', ''],
-  minYear: 1900,
-  readOnly: false,
-  disabled: false,
-  maxRange: 0,
-};
